@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Receipt — Smart Parking</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <h2>🅿️ Smart<span>Park</span></h2>
+  <div class="nav-links">
+    <a href="dashboard.html">Dashboard</a>
+    <a href="my-bookings.html">My Bookings</a>
+  </div>
+  <button class="btn-logout" onclick="logout()">Logout</button>
+</nav>
+
+<div class="page" style="max-width:480px;">
+  <div class="card" id="receiptCard">
+    <div style="text-align:center; padding:20px 0;">
+      <div style="font-size:48px;">⏳</div>
+      <div style="color:#8892a4;">Loading receipt...</div>
+    </div>
+  </div>
+</div>
+
+<style>
+.receipt-header {
+  text-align: center;
+  padding: 10px 0 24px;
+  border-bottom: 2px dashed #e2e8f0;
+  margin-bottom: 24px;
+}
+.receipt-header .icon { font-size: 52px; margin-bottom: 10px; }
+.receipt-header h2 { font-size: 22px; font-weight: 700; color: #2e7d32; }
+.receipt-header p  { color: #8892a4; font-size: 13px; margin-top: 4px; }
+
+.receipt-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #f1f3f4;
+  font-size: 14px;
+}
+.receipt-row:last-of-type { border-bottom: none; }
+.receipt-row .label { color: #8892a4; }
+.receipt-row .value { font-weight: 600; color: #1a1a2e; }
+
+.receipt-total {
+  background: linear-gradient(135deg, #1a73e8, #0d47a1);
+  color: white;
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 16px 0;
+}
+.receipt-total .label { font-size: 14px; opacity: 0.85; }
+.receipt-total .amount { font-size: 28px; font-weight: 700; }
+
+.receipt-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 20px;
+}
+</style>
+
+<script src="../script.js"></script>
+<script>
+  const user = JSON.parse(localStorage.getItem('user'));
+  if (!user) window.location.href = '../index.html';
+
+  const params    = new URLSearchParams(window.location.search);
+  const bookingId = params.get('id');
+  if (!bookingId) window.location.href = 'dashboard.html';
+
+  async function loadReceipt() {
+    const b = await apiGet(`/bookings/detail/${bookingId}`);
+
+    if (!b || b.error) {
+      window.location.href = 'dashboard.html';
+      return;
+    }
+
+    const checkIn  = new Date(b.start_time);
+    const checkOut = b.end_time ? new Date(b.end_time) : new Date();
+    const diffMs   = checkOut - checkIn;
+    const diffMins = Math.floor(diffMs / 60000);
+    const hrs      = Math.floor(diffMins / 60);
+    const mins     = diffMins % 60;
+    const duration = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
+
+    // Generate receipt number
+    const receiptNo = `SP${String(b.id).padStart(6,'0')}`;
+
+    document.getElementById('receiptCard').innerHTML = `
+      <div class="receipt-header">
+        <div class="icon">✅</div>
+        <h2>Payment Successful!</h2>
+        <p>Thank you for using Smart Parking</p>
+        <div style="margin-top:10px;">
+          <span class="badge badge-completed">PAID</span>
+        </div>
+      </div>
+
+      <div style="font-size:11px; color:#8892a4; text-transform:uppercase;
+                  font-weight:700; letter-spacing:0.6px; margin-bottom:12px;">
+        Booking Details
+      </div>
+
+      <div class="receipt-row">
+        <span class="label">Receipt No.</span>
+        <span class="value" style="color:#1a73e8;">${receiptNo}</span>
+      </div>
+      <div class="receipt-row">
+        <span class="label">Parking Slot</span>
+        <span class="value">${b.slot_number} — ${b.floor}</span>
+      </div>
+      <div class="receipt-row">
+        <span class="label">Vehicle</span>
+        <span class="value">${b.vehicle_number}</span>
+      </div>
+      <div class="receipt-row">
+        <span class="label">Check In</span>
+        <span class="value">${checkIn.toLocaleString()}</span>
+      </div>
+      <div class="receipt-row">
+        <span class="label">Check Out</span>
+        <span class="value">${checkOut.toLocaleString()}</span>
+      </div>
+      <div class="receipt-row">
+        <span class="label">Duration</span>
+        <span class="value">${duration}</span>
+      </div>
+      <div class="receipt-row">
+        <span class="label">Rate</span>
+        <span class="value">₹20 / hour</span>
+      </div>
+
+      <div class="receipt-total">
+        <div class="label">Total Paid</div>
+        <div class="amount">₹${b.total_fee || 10}</div>
+      </div>
+
+      <div class="receipt-actions">
+        <button class="btn btn-ghost" onclick="window.print()">🖨️ Print</button>
+        <button class="btn btn-primary" onclick="window.location.href='dashboard.html'">
+          🅿️ Book Again
+        </button>
+      </div>
+    `;
+  }
+
+  loadReceipt();
+</script>
+</body>
+</html>

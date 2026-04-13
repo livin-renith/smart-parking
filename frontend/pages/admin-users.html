@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Manage Users — Admin</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <h2>🅿️ Smart<span>Park</span> <span style="font-size:11px;background:rgba(255,255,255,0.2);padding:2px 8px;border-radius:10px;margin-left:6px;">ADMIN</span></h2>
+  <div class="nav-links">
+    <a href="admin-dashboard.html">Dashboard</a>
+    <a href="admin-slots.html">Manage Slots</a>
+    <a href="admin-bookings.html">Bookings</a>
+    <a href="admin-users.html" class="active">Users</a>
+  </div>
+  <div style="display:flex;align-items:center;">
+    <div class="nav-user">
+      <div class="nav-avatar">A</div>
+      <span class="nav-name" id="navName">Admin</span>
+    </div>
+    <button class="btn-logout" onclick="logout()">Logout</button>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="card">
+    <div class="card-title">All Users</div>
+    <div class="card-subtitle" id="userCount">Loading...</div>
+
+    <!-- Search -->
+    <div class="search-wrap" style="margin-bottom:16px;">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="Search by name or email..." oninput="renderUsers()">
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Total Bookings</th>
+            <th>Registered At</th>
+          </tr>
+        </thead>
+        <tbody id="usersTable">
+          <tr><td colspan="6" style="text-align:center;color:#8892a4;">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="../script.js"></script>
+<script>
+  let allUsers = [];
+  const user = JSON.parse(localStorage.getItem('user'));
+  if (!user || user.role !== 'admin') window.location.href = '../index.html';
+  document.getElementById('navName').textContent = user.name;
+
+  function renderUsers() {
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    const list = allUsers.filter(u =>
+      u.name.toLowerCase().includes(search) ||
+      u.email.toLowerCase().includes(search)
+    );
+    document.getElementById('userCount').textContent = `${list.length} users found`;
+    const tbody = document.getElementById('usersTable');
+    if (list.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#8892a4;">No users found</td></tr>';
+      return;
+    }
+    tbody.innerHTML = list.map((u, i) => `
+      <tr>
+        <td style="color:#8892a4;">${i+1}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:34px;height:34px;border-radius:50%;background:#e8f0fe;color:#1a73e8;
+                        display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;">
+              ${u.name.charAt(0).toUpperCase()}
+            </div>
+            <strong>${u.name}</strong>
+          </div>
+        </td>
+        <td>${u.email}</td>
+        <td><span class="badge badge-${u.role}">${u.role}</span></td>
+        <td style="text-align:center;"><strong>${u.total_bookings}</strong></td>
+        <td>${new Date(u.created_at).toLocaleDateString()}</td>
+      </tr>
+    `).join('');
+  }
+
+  async function load() {
+    allUsers = await apiGet('/admin/users');
+    renderUsers();
+  }
+  load();
+</script>
+</body>
+</html>
