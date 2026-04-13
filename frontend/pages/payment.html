@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment — Smart Parking</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <h2>🅿️ Smart<span>Park</span></h2>
+  <div class="nav-links">
+    <a href="dashboard.html">Dashboard</a>
+    <a href="my-bookings.html">My Bookings</a>
+  </div>
+  <button class="btn-logout" onclick="logout()">Logout</button>
+</nav>
+
+<div class="page" style="max-width:520px;">
+
+  <!-- Booking summary card -->
+  <div class="card" id="summaryCard">
+    <div style="text-align:center; padding:20px 0;">
+      <div style="font-size:48px; margin-bottom:12px;">🅿️</div>
+      <div style="color:#8892a4; font-size:14px;">Loading booking details...</div>
+    </div>
+  </div>
+
+  <!-- Payment card -->
+  <div class="card" id="paymentCard" style="display:none;">
+    <div class="card-title">💳 Payment Details</div>
+    <div class="card-subtitle">Choose your payment method</div>
+
+    <div class="alert alert-error"   id="errorMsg"></div>
+    <div class="alert alert-success" id="successMsg"></div>
+
+    <!-- Payment method selector -->
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:20px;">
+      <div class="pay-method active" id="pm-upi"  onclick="selectMethod('upi')">
+        <div style="font-size:24px;">📱</div>
+        <div style="font-size:12px; font-weight:600; margin-top:4px;">UPI</div>
+      </div>
+      <div class="pay-method" id="pm-card" onclick="selectMethod('card')">
+        <div style="font-size:24px;">💳</div>
+        <div style="font-size:12px; font-weight:600; margin-top:4px;">Card</div>
+      </div>
+      <div class="pay-method" id="pm-cash" onclick="selectMethod('cash')">
+        <div style="font-size:24px;">💵</div>
+        <div style="font-size:12px; font-weight:600; margin-top:4px;">Cash</div>
+      </div>
+    </div>
+
+    <!-- UPI form -->
+    <div id="form-upi">
+      <div class="form-group">
+        <label>UPI ID</label>
+        <input class="form-control" type="text" id="upiId" placeholder="e.g. name@upi">
+      </div>
+    </div>
+
+    <!-- Card form -->
+    <div id="form-card" style="display:none;">
+      <div class="form-group">
+        <label>Card Number</label>
+        <input class="form-control" type="text" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19">
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div class="form-group">
+          <label>Expiry Date</label>
+          <input class="form-control" type="text" id="cardExpiry" placeholder="MM/YY" maxlength="5">
+        </div>
+        <div class="form-group">
+          <label>CVV</label>
+          <input class="form-control" type="text" id="cardCvv" placeholder="123" maxlength="3">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Name on Card</label>
+        <input class="form-control" type="text" id="cardName" placeholder="Your name">
+      </div>
+    </div>
+
+    <!-- Cash form -->
+    <div id="form-cash" style="display:none;">
+      <div style="background:#fef3e2; border-radius:10px; padding:16px; font-size:14px; color:#7c4a00;">
+        💵 Please pay the amount at the parking counter before leaving.
+        Your booking will be marked as paid once confirmed.
+      </div>
+    </div>
+
+    <!-- Fee summary -->
+    <div id="feeSummary" style="background:#f8fafc; border-radius:10px; padding:16px; margin:16px 0;">
+      <div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:8px;">
+        <span style="color:#8892a4;">Rate</span>
+        <span>₹20 / hour</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:8px;">
+        <span style="color:#8892a4;">Duration</span>
+        <span id="feeDuration">Calculating...</span>
+      </div>
+      <hr style="border:none; border-top:1px solid #e2e8f0; margin:10px 0;">
+      <div style="display:flex; justify-content:space-between; font-size:18px; font-weight:700;">
+        <span>Total Fee</span>
+        <span style="color:#1a73e8;" id="feeTotal">₹--</span>
+      </div>
+      <div style="font-size:11px; color:#8892a4; margin-top:6px;">* Minimum charge: 30 minutes</div>
+    </div>
+
+    <button class="btn btn-primary" onclick="processPayment()" id="payBtn">
+      ✅ Pay Now
+    </button>
+  </div>
+
+</div>
+
+<style>
+.pay-method {
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #fafbfc;
+}
+.pay-method:hover  { border-color: #1a73e8; }
+.pay-method.active { border-color: #1a73e8; background: #e8f0fe; }
+</style>
+
+<script src="../script.js"></script>
+<script>
+  const user = JSON.parse(localStorage.getItem('user'));
+  if (!user) window.location.href = '../index.html';
+
+  // Get booking ID from URL
+  const params    = new URLSearchParams(window.location.search);
+  const bookingId = params.get('id');
+  if (!bookingId) window.location.href = 'dashboard.html';
+
+  let booking        = null;
+  let selectedMethod = 'upi';
+  let feeTimer       = null;
+
+  function selectMethod(method) {
+    selectedMethod = method;
+    document.querySelectorAll('.pay-method').forEach(m => m.classList.remove('active'));
+    document.getElementById(`pm-${method}`).classList.add('active');
+    document.getElementById('form-upi').style.display  = method === 'upi'  ? 'block' : 'none';
+    document.getElementById('form-card').style.display = method === 'card' ? 'block' : 'none';
+    document.getElementById('form-cash').style.display = method === 'cash' ? 'block' : 'none';
+  }
+
+  function calcFee(startTime) {
+    const now       = new Date();
+    const start     = new Date(startTime);
+    const diffMs    = now - start;
+    const diffHours = Math.max(diffMs / (1000 * 60 * 60), 0.5);
+    const fee       = Math.ceil(diffHours * 20);
+
+    const mins = Math.floor(diffMs / 60000);
+    const hrs  = Math.floor(mins / 60);
+    const rem  = mins % 60;
+    const dur  = hrs > 0 ? `${hrs}h ${rem}m` : `${rem}m`;
+
+    document.getElementById('feeDuration').textContent = dur;
+    document.getElementById('feeTotal').textContent    = `₹${fee}`;
+    return fee;
+  }
+
+  async function loadBooking() {
+    booking = await apiGet(`/bookings/detail/${bookingId}`);
+
+    if (!booking || booking.error) {
+      window.location.href = 'dashboard.html';
+      return;
+    }
+
+    if (booking.payment_status === 'paid') {
+      window.location.href = `receipt.html?id=${bookingId}`;
+      return;
+    }
+
+    // Show summary
+    document.getElementById('summaryCard').innerHTML = `
+      <div class="card-title">🎉 Booking Confirmed!</div>
+      <div class="card-subtitle">Your slot has been reserved</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:16px;">
+        <div style="background:#f8fafc; border-radius:10px; padding:14px;">
+          <div style="font-size:11px; color:#8892a4; margin-bottom:4px; text-transform:uppercase; font-weight:600;">Slot</div>
+          <div style="font-size:22px; font-weight:700; color:#1a73e8;">${booking.slot_number}</div>
+          <div style="font-size:12px; color:#8892a4;">${booking.floor}</div>
+        </div>
+        <div style="background:#f8fafc; border-radius:10px; padding:14px;">
+          <div style="font-size:11px; color:#8892a4; margin-bottom:4px; text-transform:uppercase; font-weight:600;">Vehicle</div>
+          <div style="font-size:16px; font-weight:700;">${booking.vehicle_number}</div>
+          <div style="font-size:12px; color:#8892a4;">Registered vehicle</div>
+        </div>
+        <div style="background:#f8fafc; border-radius:10px; padding:14px;">
+          <div style="font-size:11px; color:#8892a4; margin-bottom:4px; text-transform:uppercase; font-weight:600;">Check In</div>
+          <div style="font-size:14px; font-weight:600;">${new Date(booking.start_time).toLocaleTimeString()}</div>
+          <div style="font-size:12px; color:#8892a4;">${new Date(booking.start_time).toLocaleDateString()}</div>
+        </div>
+        <div style="background:#f8fafc; border-radius:10px; padding:14px;">
+          <div style="font-size:11px; color:#8892a4; margin-bottom:4px; text-transform:uppercase; font-weight:600;">Rate</div>
+          <div style="font-size:16px; font-weight:700; color:#2e7d32;">₹20 / hr</div>
+          <div style="font-size:12px; color:#8892a4;">Min. 30 minutes</div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('paymentCard').style.display = 'block';
+
+    // Update fee every 30 seconds
+    calcFee(booking.start_time);
+    feeTimer = setInterval(() => calcFee(booking.start_time), 30000);
+  }
+
+  async function processPayment() {
+    // Basic validation
+    if (selectedMethod === 'upi') {
+      const upi = document.getElementById('upiId').value.trim();
+      if (!upi || !upi.includes('@')) {
+        showAlert('errorMsg', 'Please enter a valid UPI ID (e.g. name@upi)');
+        return;
+      }
+    } else if (selectedMethod === 'card') {
+      const num  = document.getElementById('cardNumber').value.trim();
+      const exp  = document.getElementById('cardExpiry').value.trim();
+      const cvv  = document.getElementById('cardCvv').value.trim();
+      const name = document.getElementById('cardName').value.trim();
+      if (!num || !exp || !cvv || !name) {
+        showAlert('errorMsg', 'Please fill in all card details');
+        return;
+      }
+    }
+
+    const payBtn = document.getElementById('payBtn');
+    payBtn.textContent = '⏳ Processing...';
+    payBtn.disabled    = true;
+
+    // Simulate small delay for realism
+    await new Promise(r => setTimeout(r, 1500));
+
+    const data = await apiPut(`/bookings/pay/${bookingId}`, {});
+
+    if (data.message) {
+      clearInterval(feeTimer);
+      window.location.href = `receipt.html?id=${bookingId}`;
+    } else {
+      showAlert('errorMsg', data.error || 'Payment failed. Try again.');
+      payBtn.textContent = '✅ Pay Now';
+      payBtn.disabled    = false;
+    }
+  }
+
+  loadBooking();
+</script>
+</body>
+</html>

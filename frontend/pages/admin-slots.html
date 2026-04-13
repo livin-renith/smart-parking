@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Manage Slots — Admin</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <h2>🅿️ Smart<span>Park</span> <span style="font-size:11px;background:rgba(255,255,255,0.2);padding:2px 8px;border-radius:10px;margin-left:6px;">ADMIN</span></h2>
+  <div class="nav-links">
+    <a href="admin-dashboard.html">Dashboard</a>
+    <a href="admin-slots.html" class="active">Manage Slots</a>
+    <a href="admin-bookings.html">Bookings</a>
+    <a href="admin-users.html">Users</a>
+  </div>
+  <div style="display:flex;align-items:center;">
+    <div class="nav-user">
+      <div class="nav-avatar">A</div>
+      <span class="nav-name" id="navName">Admin</span>
+    </div>
+    <button class="btn-logout" onclick="logout()">Logout</button>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- Add slot -->
+  <div class="card">
+    <div class="card-title">Add New Slot</div>
+    <div class="card-subtitle">Add a new parking slot to the system</div>
+
+    <div class="alert alert-error"   id="errorMsg"></div>
+    <div class="alert alert-success" id="successMsg"></div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+      <div class="form-group" style="margin-bottom:0;">
+        <label>Slot Number</label>
+        <input class="form-control" type="text" id="slotNumber" placeholder="e.g. D1">
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label>Floor</label>
+        <select class="form-control" id="slotFloor">
+          <option value="Ground Floor">Ground Floor</option>
+          <option value="First Floor">First Floor</option>
+          <option value="Second Floor">Second Floor</option>
+          <option value="Third Floor">Third Floor</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-primary" style="width:auto;margin-top:16px;" onclick="addSlot()">+ Add Slot</button>
+  </div>
+
+  <!-- Slots table -->
+  <div class="card">
+    <div class="card-title">All Parking Slots</div>
+    <div class="card-subtitle" id="slotCount">Loading...</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Slot Number</th>
+            <th>Floor</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="slotsTable">
+          <tr><td colspan="5" style="text-align:center;color:#8892a4;">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script src="../script.js"></script>
+<script>
+  const user = JSON.parse(localStorage.getItem('user'));
+  if (!user || user.role !== 'admin') window.location.href = '../index.html';
+  document.getElementById('navName').textContent = user.name;
+
+  async function loadSlots() {
+    const slots = await apiGet('/slots');
+    document.getElementById('slotCount').textContent = `${slots.length} total slots`;
+    const tbody = document.getElementById('slotsTable');
+    tbody.innerHTML = slots.map((s, i) => `
+      <tr>
+        <td style="color:#8892a4;">${i+1}</td>
+        <td><strong>${s.slot_number}</strong></td>
+        <td>${s.floor}</td>
+        <td><span class="badge badge-${s.status}">${s.status}</span></td>
+        <td style="display:flex;gap:8px;flex-wrap:wrap;">
+          ${s.status !== 'available'
+            ? `<button class="btn btn-success btn-sm" onclick="setStatus(${s.id},'available')">Set Available</button>`
+            : `<button class="btn btn-danger  btn-sm" onclick="setStatus(${s.id},'occupied')">Set Occupied</button>`}
+          <button class="btn btn-ghost btn-sm" onclick="deleteSlot(${s.id},'${s.slot_number}')">🗑 Delete</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  async function addSlot() {
+    const slot_number = document.getElementById('slotNumber').value.trim().toUpperCase();
+    const floor       = document.getElementById('slotFloor').value;
+    if (!slot_number) { showAlert('errorMsg','Please enter a slot number'); return; }
+    const data = await apiPost('/admin/slots', { slot_number, floor });
+    if (data.message) {
+      showAlert('successMsg', data.message, 'success');
+      document.getElementById('slotNumber').value = '';
+      loadSlots();
+    } else { showAlert('errorMsg', data.error); }
+  }
+
+  async function setStatus(id, status) {
+    const data = await apiPut(`/admin/slots/${id}`, { status });
+    alert(data.message || data.error);
+    loadSlots();
+  }
+
+  async function deleteSlot(id, name) {
+    if (!confirm(`Delete slot ${name}? This cannot be undone.`)) return;
+    const data = await apiDelete(`/admin/slots/${id}`);
+    alert(data.message || data.error);
+    loadSlots();
+  }
+
+  loadSlots();
+</script>
+</body>
+</html>

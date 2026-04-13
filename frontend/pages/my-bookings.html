@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Bookings — Smart Parking</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <h2>🅿️ Smart<span>Park</span></h2>
+  <div class="nav-links">
+    <a href="dashboard.html">Dashboard</a>
+    <a href="my-bookings.html" class="active">My Bookings</a>
+    <a href="my-vehicles.html">My Vehicles</a>
+    <a href="profile.html">Profile</a>
+  </div>
+  <div style="display:flex;align-items:center;">
+    <div class="nav-user">
+      <div class="nav-avatar" id="navAvatar">U</div>
+      <span class="nav-name" id="navName"></span>
+    </div>
+    <button class="btn-logout" onclick="logout()">Logout</button>
+  </div>
+</nav>
+
+<div class="page" style="max-width:720px;">
+  <div class="card">
+    <div class="card-title">My Bookings</div>
+    <div class="card-subtitle">View and manage all your parking bookings</div>
+
+    <div class="filter-tabs">
+      <div class="tab active" onclick="setFilter('all',this)">All</div>
+      <div class="tab" onclick="setFilter('active',this)">Active</div>
+      <div class="tab" onclick="setFilter('completed',this)">Completed</div>
+      <div class="tab" onclick="setFilter('cancelled',this)">Cancelled</div>
+    </div>
+
+    <div id="bookingsList"></div>
+  </div>
+</div>
+
+<script src="../script.js"></script>
+<script>
+  let allBookings = [];
+  let currentFilter = 'all';
+  const user = JSON.parse(localStorage.getItem('user'));
+  if (!user) window.location.href = '../index.html';
+  document.getElementById('navName').textContent   = user.name;
+  document.getElementById('navAvatar').textContent = user.name.charAt(0).toUpperCase();
+
+  function setFilter(f, el) {
+    currentFilter = f;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    renderBookings();
+  }
+
+  function renderBookings() {
+    const list = currentFilter === 'all' ? allBookings : allBookings.filter(b => b.status === currentFilter);
+    const container = document.getElementById('bookingsList');
+    if (list.length === 0) {
+      container.innerHTML = `<div class="empty-state"><div class="icon">📋</div><h3>No bookings found</h3><p>You have no ${currentFilter === 'all' ? '' : currentFilter} bookings yet.</p></div>`;
+      return;
+    }
+    container.innerHTML = list.map(b => `
+      <div class="booking-card ${b.status}">
+        <div class="booking-top">
+          <div>
+            <div class="booking-slot">Slot ${b.slot_number}</div>
+            <div style="margin-top:4px;"><span class="badge badge-${b.status}">${b.status}</span></div>
+          </div>
+          ${b.status === 'active' ? `<button class="btn btn-danger btn-sm" onclick="cancelBooking(${b.id})">Cancel</button>` : ''}
+        </div>
+        <div class="booking-meta">
+          <div class="booking-meta-item">🏢 <strong>${b.floor}</strong></div>
+          <div class="booking-meta-item">🚗 <strong>${b.vehicle_number}</strong></div>
+          <div class="booking-meta-item">🕐 <strong>${new Date(b.start_time).toLocaleString()}</strong></div>
+          <div class="booking-meta-item">⏱️ <strong>${b.end_time ? Math.round((new Date(b.end_time)-new Date(b.start_time))/60000)+' mins' : 'Ongoing'}</strong></div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function cancelBooking(id) {
+    if (!confirm('Cancel this booking?')) return;
+    const data = await apiPut(`/bookings/cancel/${id}`, {});
+    alert(data.message || data.error);
+    allBookings = await apiGet(`/bookings/${user.id}`);
+    renderBookings();
+  }
+
+  async function load() {
+    allBookings = await apiGet(`/bookings/${user.id}`);
+    renderBookings();
+  }
+  load();
+</script>
+</body>
+</html>

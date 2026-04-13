@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Vehicles — Smart Parking</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <h2>🅿️ Smart<span>Park</span></h2>
+  <div class="nav-links">
+    <a href="dashboard.html">Dashboard</a>
+    <a href="my-bookings.html">My Bookings</a>
+    <a href="my-vehicles.html" class="active">My Vehicles</a>
+    <a href="profile.html">Profile</a>
+  </div>
+  <div style="display:flex;align-items:center;">
+    <div class="nav-user">
+      <div class="nav-avatar" id="navAvatar">U</div>
+      <span class="nav-name" id="navName"></span>
+    </div>
+    <button class="btn-logout" onclick="logout()">Logout</button>
+  </div>
+</nav>
+
+<div class="page" style="max-width:680px;">
+
+  <div class="card">
+    <div class="card-title">Add Vehicle</div>
+    <div class="card-subtitle">Save your vehicles for faster booking</div>
+
+    <div class="alert alert-error"   id="errorMsg"></div>
+    <div class="alert alert-success" id="successMsg"></div>
+
+    <div class="form-group">
+      <label>Vehicle Number</label>
+      <input class="form-control" type="text" id="vNumber" placeholder="e.g. TN01AB1234">
+    </div>
+    <div class="form-group">
+      <label>Vehicle Name <span style="color:#aaa;font-weight:400;">(optional)</span></label>
+      <input class="form-control" type="text" id="vName" placeholder="e.g. My Swift">
+    </div>
+    <div class="form-group">
+      <label>Vehicle Type</label>
+      <select class="form-control" id="vType">
+        <option value="car">🚗 Car</option>
+        <option value="bike">🏍️ Bike</option>
+        <option value="truck">🚛 Truck</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" onclick="addVehicle()">+ Add Vehicle</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Saved Vehicles</div>
+    <div class="card-subtitle">These vehicles appear when you book a slot</div>
+    <div class="vehicles-grid" id="vehicleList"></div>
+  </div>
+
+</div>
+
+<script src="../script.js"></script>
+<script>
+  const user = JSON.parse(localStorage.getItem('user'));
+  if (!user) window.location.href = '../index.html';
+  document.getElementById('navName').textContent   = user.name;
+  document.getElementById('navAvatar').textContent = user.name.charAt(0).toUpperCase();
+
+  async function loadVehicles() {
+    const vehicles = await apiGet(`/vehicles/${user.id}`);
+    const container = document.getElementById('vehicleList');
+    if (vehicles.length === 0) {
+      container.innerHTML = `<div class="empty-state"><div class="icon">🚗</div><h3>No vehicles yet</h3><p>Add your first vehicle above</p></div>`;
+      return;
+    }
+    container.innerHTML = vehicles.map(v => `
+      <div class="vehicle-card">
+        <div class="vehicle-top">
+          <span class="vehicle-icon">${v.vehicle_type==='bike'?'🏍️':v.vehicle_type==='truck'?'🚛':'🚗'}</span>
+          <button class="remove-btn" onclick="removeVehicle(${v.id})" title="Remove">✕</button>
+        </div>
+        <div class="vehicle-num">${v.vehicle_number}</div>
+        <div class="vehicle-type-label">${v.vehicle_name ? v.vehicle_name+' · ' : ''}${v.vehicle_type}</div>
+      </div>
+    `).join('');
+  }
+
+  async function addVehicle() {
+    const vehicle_number = document.getElementById('vNumber').value.trim().toUpperCase();
+    const vehicle_name   = document.getElementById('vName').value.trim();
+    const vehicle_type   = document.getElementById('vType').value;
+    if (!vehicle_number) { showAlert('errorMsg','Please enter a vehicle number'); return; }
+    const data = await apiPost('/vehicles', { user_id:user.id, vehicle_number, vehicle_name, vehicle_type });
+    if (data.message) {
+      showAlert('successMsg', data.message, 'success');
+      document.getElementById('vNumber').value = '';
+      document.getElementById('vName').value   = '';
+      loadVehicles();
+    } else { showAlert('errorMsg', data.error); }
+  }
+
+  async function removeVehicle(id) {
+    if (!confirm('Remove this vehicle?')) return;
+    const data = await apiDelete(`/vehicles/${id}`);
+    alert(data.message || data.error);
+    loadVehicles();
+  }
+
+  loadVehicles();
+</script>
+</body>
+</html>

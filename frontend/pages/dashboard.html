@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Smart Parking</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <h2>🅿️ Smart<span>Park</span></h2>
+  <div class="nav-links">
+    <a href="dashboard.html"  class="active">Dashboard</a>
+    <a href="my-bookings.html">My Bookings</a>
+    <a href="my-vehicles.html">My Vehicles</a>
+    <a href="profile.html">Profile</a>
+  </div>
+  <div style="display:flex; align-items:center;">
+    <div class="nav-user">
+      <div class="nav-avatar" id="navAvatar">U</div>
+      <span class="nav-name"  id="navName">User</span>
+    </div>
+    <button class="btn-logout" onclick="logout()">Logout</button>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- Slot counts -->
+  <div class="stats-grid" id="statsRow"></div>
+
+  <!-- Slots card -->
+  <div class="card">
+    <div class="card-title">Parking Slots</div>
+    <div class="card-subtitle">Click any available slot to book it instantly</div>
+
+    <!-- Search -->
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="Search slot number..." oninput="filterSlots()">
+    </div>
+
+    <!-- Floor tabs -->
+    <div class="filter-tabs" id="floorTabs"></div>
+
+    <!-- Legend -->
+    <div class="legend">
+      <div class="legend-item"><div class="dot green"></div> Available</div>
+      <div class="legend-item"><div class="dot red"></div> Occupied</div>
+      <div class="legend-item"><div class="dot orange"></div> Reserved</div>
+    </div>
+
+    <!-- Grid -->
+    <div class="slots-grid" id="slotsGrid">
+      <p style="color:#8892a4">Loading slots...</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- Booking Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal-box">
+    <div class="modal-title">Book Slot <span id="modalSlotName" style="color:#1a73e8"></span></div>
+    <div class="modal-sub">Select a saved vehicle or enter manually</div>
+
+    <div class="alert alert-error" id="modalError"></div>
+
+    <div class="form-group">
+      <label>Saved Vehicles</label>
+      <div id="modalVehicleList" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:4px;"></div>
+    </div>
+
+    <div class="form-group">
+      <label>Vehicle Number</label>
+      <input class="form-control" type="text" id="vehicleNumber" placeholder="e.g. TN01AB1234">
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-primary" style="flex:1" onclick="confirmBooking()">✅ Confirm</button>
+      <button class="btn btn-ghost"   style="flex:1" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script src="../script.js"></script>
+<script>
+  let allSlots = [];
+  let selectedFloor = 'All';
+  let selectedSlotId = null;
+  const user = JSON.parse(localStorage.getItem('user'));
+  if (!user) window.location.href = '../index.html';
+
+  document.getElementById('navName').textContent  = user.name;
+  document.getElementById('navAvatar').textContent = user.name.charAt(0).toUpperCase();
+
+  async function loadSlots() {
+    allSlots = await apiGet('/slots');
+    buildStats();
+    buildFloorTabs();
+    renderSlots();
+  }
+
+  function buildStats() {
+    const total     = allSlots.length;
+    const available = allSlots.filter(s => s.status === 'available').length;
+    const occupied  = allSlots.filter(s => s.status === 'occupied').length;
+    const reserved  = allSlots.filter(s => s.status === 'reserved').length;
+
+    document.getElementById('statsRow').innerHTML = `
+      <div class="stat-card">
+        <div class="stat-icon blue">🅿️</div>
+        <div class="stat-info"><div class="number">${total}</div><div class="label">Total Slots</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon green">✅</div>
+        <div class="stat-info"><div class="number">${available}</div><div class="label">Available</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon red">🚫</div>
+        <div class="stat-info"><div class="number">${occupied}</div><div class="label">Occupied</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon orange">⏳</div>
+        <div class="stat-info"><div class="number">${reserved}</div><div class="label">Reserved</div></div>
+      </div>
+    `;
+  }
+
+  function buildFloorTabs() {
+    const floors = [...new Set(allSlots.map(s => s.floor))];
+    document.getElementById('floorTabs').innerHTML =
+      `<div class="tab active" onclick="setFloor('All',this)">All Floors</div>` +
+      floors.map(f => `<div class="tab" onclick="setFloor('${f}',this)">${f}</div>`).join('');
+  }
+
+  function setFloor(floor, el) {
+    selectedFloor = floor;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    renderSlots();
+  }
+
+  function filterSlots() { renderSlots(); }
+
+  function renderSlots() {
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    const filtered = allSlots.filter(s =>
+      (selectedFloor === 'All' || s.floor === selectedFloor) &&
+      s.slot_number.toLowerCase().includes(search)
+    );
+    const grid = document.getElementById('slotsGrid');
+    if (filtered.length === 0) {
+      grid.innerHTML = '<div class="empty-state"><div class="icon">🔍</div><h3>No slots found</h3><p>Try a different search or floor</p></div>';
+      return;
+    }
+    grid.innerHTML = '';
+    filtered.forEach(slot => {
+      const div = document.createElement('div');
+      div.className = `slot ${slot.status}`;
+      div.innerHTML = `<div class="slot-num">${slot.slot_number}</div><div class="slot-floor">${slot.floor}</div>`;
+      if (slot.status === 'available') div.onclick = () => openModal(slot.id, slot.slot_number);
+      grid.appendChild(div);
+    });
+  }
+
+  async function openModal(slotId, slotName) {
+    selectedSlotId = slotId;
+    document.getElementById('modalSlotName').textContent = slotName;
+    document.getElementById('vehicleNumber').value = '';
+    document.getElementById('modal').style.display = 'flex';
+    const vehicles = await apiGet(`/vehicles/${user.id}`);
+    const list = document.getElementById('modalVehicleList');
+    list.innerHTML = vehicles.length === 0
+      ? '<p style="font-size:13px;color:#8892a4;">No saved vehicles</p>'
+      : vehicles.map(v => `
+          <div class="vehicle-card" style="flex-direction:row; padding:10px 14px; min-width:unset;"
+               onclick="pickVehicle('${v.vehicle_number}', this)">
+            <span>${v.vehicle_type==='bike'?'🏍️':v.vehicle_type==='truck'?'🚛':'🚗'}</span>
+            <div>
+              <div class="vehicle-num" style="font-size:13px;">${v.vehicle_number}</div>
+              <div class="vehicle-type-label">${v.vehicle_name||v.vehicle_type}</div>
+            </div>
+          </div>`).join('');
+  }
+
+  function pickVehicle(number, el) {
+    document.querySelectorAll('#modalVehicleList .vehicle-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('vehicleNumber').value = number;
+  }
+
+  function closeModal() { document.getElementById('modal').style.display = 'none'; }
+
+  async function confirmBooking() {
+  const vehicle = document.getElementById('vehicleNumber').value.trim();
+  if (!vehicle) {
+    showAlert('modalError', 'Please enter or select a vehicle number');
+    return;
+  }
+  const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
+  const data = await apiPost('/bookings', {
+    user_id: user.id,
+    slot_id: selectedSlotId,
+    vehicle_number: vehicle,
+    start_time: now
+  });
+  if (data.message) {
+    closeModal();
+    // Redirect to payment page
+    window.location.href = `payment.html?id=${data.bookingId}`;
+  } else {
+    showAlert('modalError', data.error);
+  }
+}
+
+  loadSlots();
+</script>
+</body>
+</html>
