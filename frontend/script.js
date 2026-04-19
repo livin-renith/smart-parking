@@ -1,4 +1,4 @@
-const API = 'http://localhost:5000/api';
+const API = 'https://smart-parking-backend-4lx3.onrender.com/api';
 
 // ── Helper: get token from localStorage
 function getToken() {
