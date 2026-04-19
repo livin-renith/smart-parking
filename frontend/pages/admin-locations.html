@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="stylesheet" href="../animations.css">
+  <meta charset="UTF-8">
+  <title>Manage Locations — Admin</title>
+  <link rel="stylesheet" href="../style.css">
+  <!-- Leaflet — free, no API key -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <style>
+    #adminMap {
+      width:100%; height:300px;
+      border-radius:12px; margin-bottom:16px;
+      z-index:1;
+    }
+    .loc-row {
+      display:flex; align-items:center; gap:12px;
+      padding:14px 0; border-bottom:1px solid #f1f3f4;
+    }
+    .loc-row:last-child { border-bottom:none; }
+    .loc-row-icon {
+      width:40px; height:40px; border-radius:10px;
+      display:flex; align-items:center;
+      justify-content:center; font-size:20px; flex-shrink:0;
+    }
+    .loc-row-info  { flex:1; }
+    .loc-row-name  { font-weight:700; font-size:14px; }
+    .loc-row-meta  { font-size:12px; color:#8892a4; margin-top:2px; }
+    .coord-box {
+      background:#f0f6ff; border-radius:8px;
+      padding:10px 14px; font-size:13px;
+      color:#1a73e8; font-weight:600; margin-bottom:12px;
+      border:1.5px solid #c5d8f8;
+    }
+    .type-mall       { background:#e8f0fe; color:#1a73e8; }
+    .type-hospital   { background:#fce8e6; color:#c62828; }
+    .type-hotel      { background:#fef3e2; color:#e65100; }
+    .type-restaurant { background:#f3e8ff; color:#7c3aed; }
+    .type-park       { background:#e6f4ea; color:#2e7d32; }
+    .type-other      { background:#f1f3f4; color:#5f6368; }
+  </style>
+</head>
+<body>
+  <!-- Page loader — paste at top of every page body -->
+<div id="page-loader">
+  <div class="loader-icon">🅿️</div>
+  <div class="loader-title">SmartPark</div>
+  <div class="loader-track">
+    <div class="loader-fill"></div>
+  </div>
+  <div class="loader-dots">
+    <div class="loader-dot"></div>
+    <div class="loader-dot"></div>
+    <div class="loader-dot"></div>
+  </div>
+</div>
+
+<!-- Floating particles background -->
+<div class="particles-container"></div>
+
+<!-- Scroll to top button -->
+<button id="scroll-top">↑</button>
+
+<nav class="navbar">
+  <h2>🅿️ Smart<span>Park</span>
+    <span style="font-size:11px;background:rgba(255,255,255,0.2);
+                 padding:2px 8px;border-radius:10px;margin-left:6px;">
+      ADMIN
+    </span>
+  </h2>
+  <div class="nav-links">
+    <a href="admin-dashboard.html">Dashboard</a>
+    <a href="admin-slots.html">Slots</a>
+    <a href="admin-bookings.html">Bookings</a>
+    <a href="admin-users.html">Users</a>
+    <a href="admin-locations.html" class="active">Locations</a>
+  </div>
+  <div style="display:flex;align-items:center;">
+    <div class="nav-user">
+      <div class="nav-avatar">A</div>
+      <span class="nav-name" id="navName">Admin</span>
+    </div>
+    <button class="btn-logout" onclick="logout()">Logout</button>
+  </div>
+</nav>
+
+<div class="page">
+  <div style="display:grid;grid-template-columns:1fr 1fr;
+              gap:20px;align-items:start;">
+
+    <!--<div class="card reveal-section">Add location -->
+    
+      <div class="card-title">📍 Add New Location</div>
+      <div class="card-subtitle">
+        Click anywhere on the map to set coordinates automatically
+      </div>
+
+      <div class="alert alert-error"   id="errorMsg"></div>
+      <div class="alert alert-success" id="successMsg"></div>
+
+      <!-- Leaflet mini map -->
+      <div id="adminMap"></div>
+
+      <div class="coord-box" id="coordDisplay">
+        📍 Click on the map above to pick coordinates
+      </div>
+
+      <div class="form-group">
+        <label>Location Name</label>
+        <input class="form-control" type="text" id="locName"
+               placeholder="e.g. Phoenix MarketCity">
+      </div>
+      <div class="form-group">
+        <label>Type</label>
+        <select class="form-control" id="locType">
+          <option value="mall">🏬 Mall</option>
+          <option value="hospital">🏥 Hospital</option>
+          <option value="hotel">🏨 Hotel</option>
+          <option value="restaurant">🍽️ Restaurant</option>
+          <option value="park">🌳 Park</option>
+          <option value="other">📍 Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Address</label>
+        <input class="form-control" type="text" id="locAddress"
+               placeholder="Full address">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="form-group">
+          <label>Latitude</label>
+          <input class="form-control" type="text" id="locLat"
+                 placeholder="Click map" readonly>
+        </div>
+        <div class="form-group">
+          <label>Longitude</label>
+          <input class="form-control" type="text" id="locLng"
+                 placeholder="Click map" readonly>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Description
+          <span style="color:#aaa;font-weight:400;">(optional)</span>
+        </label>
+        <input class="form-control" type="text" id="locDesc"
+               placeholder="Short description">
+      </div>
+
+      <button class="btn btn-primary" onclick="addLocation()">
+        + Add Location
+      </button>
+    </div>
+
+    <!-- Locations list -->
+    <div>
+      <div class="card reveal-section">
+        <div class="card-title">🗺️ All Locations</div>
+        <div class="card-subtitle" id="locCount">Loading...</div>
+        <div id="locationRows"></div>
+      </div>
+
+      <!-- Assign slots -->
+      <div class="card" id="assignCard" style="display:none;">
+        <div class="card-title">
+          🅿️ Add Slots to
+          <span id="assignLocName" style="color:#1a73e8;"></span>
+        </div>
+        <div class="card-subtitle">
+          Add parking slots for this location
+        </div>
+
+        <div class="alert alert-error"   id="assignError"></div>
+        <div class="alert alert-success" id="assignSuccess"></div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="form-group">
+            <label>Slot Number</label>
+            <input class="form-control" type="text" id="assignSlotNum"
+                   placeholder="e.g. A1">
+          </div>
+          <div class="form-group">
+            <label>Floor</label>
+            <select class="form-control" id="assignFloor">
+              <option value="Ground Floor">Ground Floor</option>
+              <option value="First Floor">First Floor</option>
+              <option value="Second Floor">Second Floor</option>
+              <option value="Third Floor">Third Floor</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary" style="width:auto;"
+                onclick="addSlotToLocation()">
+          + Add Slot
+        </button>
+        <div style="margin-top:16px;" id="assignedSlotsList"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="../script.js"></script>
+<script>
+  const user = JSON.parse(localStorage.getItem('user'));
+  if (!user || user.role !== 'admin') window.location.href = '../index.html';
+  document.getElementById('navName').textContent = user.name;
+
+  const typeConfig = {
+    mall:'🏬', hospital:'🏥', hotel:'🏨',
+    restaurant:'🍽️', park:'🌳', other:'📍'
+  };
+
+  let selectedAssignLocId = null;
+  let adminMarker = null;
+
+  // ── Init Leaflet admin map ──
+  const adminMap = L.map('adminMap').setView([10.8231, 78.6872], 13);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution : '© OpenStreetMap contributors',
+    maxZoom     : 19
+  }).addTo(adminMap);
+
+  // Click on map to get coordinates
+  adminMap.on('click', function(e) {
+    const lat = e.latlng.lat.toFixed(6);
+    const lng = e.latlng.lng.toFixed(6);
+
+    document.getElementById('locLat').value = lat;
+    document.getElementById('locLng').value = lng;
+    document.getElementById('coordDisplay').textContent =
+      `📍 Lat: ${lat},  Lng: ${lng}  — coordinates set!`;
+
+    // Drop a marker
+    if (adminMarker) adminMap.removeLayer(adminMarker);
+    adminMarker = L.marker([parseFloat(lat), parseFloat(lng)])
+                   .addTo(adminMap)
+                   .bindPopup('📍 New location here')
+                   .openPopup();
+  });
+
+  // ── Load locations ──
+  async function loadLocations() {
+    const locs = await apiGet('/locations');
+    document.getElementById('locCount').textContent =
+      `${locs.length} location${locs.length!==1?'s':''}`;
+
+    document.getElementById('locationRows').innerHTML =
+      locs.length === 0
+        ? `<div style="text-align:center;padding:20px;color:#8892a4;">
+             No locations added yet
+           </div>`
+        : locs.map(l => `
+            <div class="loc-row">
+              <div class="loc-row-icon type-${l.type}">
+                ${typeConfig[l.type]||'📍'}
+              </div>
+              <div class="loc-row-info">
+                <div class="loc-row-name">${l.name}</div>
+                <div class="loc-row-meta">
+                  ${l.type} &nbsp;·&nbsp; ${l.total_slots||0} slots
+                  &nbsp;·&nbsp;
+                  <span style="color:#2e7d32;font-weight:600;">
+                    ${l.available_slots||0} free
+                  </span>
+                </div>
+              </div>
+              <div style="display:flex;gap:6px;">
+                <button class="btn btn-success btn-sm"
+                        onclick="openAssign(${l.id},'${l.name}')">
+                  + Slots
+                </button>
+                <button class="btn btn-danger btn-sm"
+                        onclick="deleteLocation(${l.id})">
+                  🗑
+                </button>
+              </div>
+            </div>`).join('');
+  }
+
+  // ── Add location ──
+  async function addLocation() {
+    const name    = document.getElementById('locName').value.trim();
+    const type    = document.getElementById('locType').value;
+    const address = document.getElementById('locAddress').value.trim();
+    const lat     = document.getElementById('locLat').value;
+    const lng     = document.getElementById('locLng').value;
+    const desc    = document.getElementById('locDesc').value.trim();
+
+    if (!name || !address) {
+      showAlert('errorMsg','Name and address are required'); return;
+    }
+    if (!lat || !lng) {
+      showAlert('errorMsg','Please click on the map to set coordinates'); return;
+    }
+
+    const data = await apiPost('/locations', {
+      name, type, address,
+      latitude: lat, longitude: lng,
+      description: desc
+    });
+
+    if (data.message) {
+      showAlert('successMsg', data.message, 'success');
+      document.getElementById('locName').value    = '';
+      document.getElementById('locAddress').value = '';
+      document.getElementById('locDesc').value    = '';
+      document.getElementById('locLat').value     = '';
+      document.getElementById('locLng').value     = '';
+      document.getElementById('coordDisplay').textContent =
+        '📍 Click on the map above to pick coordinates';
+      if (adminMarker) adminMap.removeLayer(adminMarker);
+      loadLocations();
+    } else {
+      showAlert('errorMsg', data.error);
+    }
+  }
+
+  // ── Delete location ──
+  async function deleteLocation(id) {
+    if (!confirm('Delete this location and all its slots?')) return;
+    const data = await apiDelete(`/locations/${id}`);
+    alert(data.message || data.error);
+    loadLocations();
+  }
+
+  // ── Open assign slots panel ──
+  async function openAssign(locId, locName) {
+    selectedAssignLocId = locId;
+    document.getElementById('assignLocName').textContent = locName;
+    document.getElementById('assignCard').style.display  = 'block';
+    document.getElementById('assignCard')
+            .scrollIntoView({ behavior:'smooth' });
+    loadAssignedSlots();
+  }
+
+  // ── Load assigned slots ──
+  async function loadAssignedSlots() {
+    const slots = await apiGet(`/slots/location/${selectedAssignLocId}`);
+    const el    = document.getElementById('assignedSlotsList');
+
+    if (slots.length === 0) {
+      el.innerHTML =
+        '<p style="font-size:13px;color:#8892a4;">No slots added yet</p>';
+      return;
+    }
+
+    el.innerHTML = `
+      <div style="font-size:13px;font-weight:600;
+                  margin-bottom:8px;color:#4a5568;">
+        Assigned Slots (${slots.length})
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;">
+        ${slots.map(s => `
+          <div style="background:#f0f6ff;border:1.5px solid #1a73e8;
+                      border-radius:8px;padding:6px 12px;
+                      font-size:13px;font-weight:600;color:#1a73e8;">
+            ${s.slot_number}
+            <span style="font-size:11px;color:#8892a4;font-weight:400;">
+              ${s.floor}
+            </span>
+          </div>`).join('')}
+      </div>`;
+  }
+
+  // ── Add slot to location ──
+  async function addSlotToLocation() {
+    const slot_number = document.getElementById('assignSlotNum')
+                                .value.trim().toUpperCase();
+    const floor       = document.getElementById('assignFloor').value;
+
+    if (!slot_number) {
+      showAlert('assignError','Please enter a slot number'); return;
+    }
+
+    const data = await apiPost('/admin/slots', {
+      slot_number, floor,
+      location_id: selectedAssignLocId
+    });
+
+    if (data.message) {
+      showAlert('assignSuccess', data.message, 'success');
+      document.getElementById('assignSlotNum').value = '';
+      loadAssignedSlots();
+      loadLocations();
+    } else {
+      showAlert('assignError', data.error);
+    }
+  }
+
+  loadLocations();
+</script>
+<script src="../app.js"></script>
+</body>
+</html>

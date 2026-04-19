@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="stylesheet" href="../animations.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Find Parking — Smart Parking</title>
+  <link rel="stylesheet" href="../style.css">
+  <!-- Leaflet CSS — free, no API key needed -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <style>
+    .map-page {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      height: calc(100vh - 64px);
+      overflow: hidden;
+    }
+    .map-panel {
+      background: white;
+      overflow-y: auto;
+      border-right: 1px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+    }
+    .map-panel-header {
+      padding: 20px;
+      border-bottom: 1px solid #e2e8f0;
+      position: sticky;
+      top: 0;
+      background: white;
+      z-index: 10;
+    }
+    .map-panel-header h3 { font-size:16px; font-weight:700; margin-bottom:12px; color:#1a1a2e; }
+    .type-filters { display:flex; gap:6px; flex-wrap:wrap; }
+    .type-pill {
+      padding: 5px 12px; border-radius:20px;
+      border: 1.5px solid #e2e8f0;
+      font-size:12px; font-weight:600;
+      cursor:pointer; transition:all 0.2s; white-space:nowrap;
+    }
+    .type-pill:hover  { border-color:#1a73e8; color:#1a73e8; }
+    .type-pill.active { background:#1a73e8; color:white; border-color:#1a73e8; }
+    .location-list { padding:12px; }
+    .loc-card {
+      border:1.5px solid #e2e8f0; border-radius:12px;
+      padding:14px; margin-bottom:10px;
+      cursor:pointer; transition:all 0.2s;
+    }
+    .loc-card:hover    { border-color:#1a73e8; box-shadow:0 4px 12px rgba(26,115,232,0.1); }
+    .loc-card.selected { border-color:#1a73e8; background:#f0f6ff; }
+    .loc-card-top { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+    .loc-icon {
+      width:40px; height:40px; border-radius:10px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:20px; flex-shrink:0;
+    }
+    .loc-info  { flex:1; }
+    .loc-name  { font-size:14px; font-weight:700; color:#1a1a2e; }
+    .loc-addr  { font-size:12px; color:#8892a4; margin-top:2px; }
+    .loc-slots { text-align:right; flex-shrink:0; }
+    .slots-free { font-size:18px; font-weight:700; color:#2e7d32; line-height:1; }
+    .slots-free.none { color:#c62828; }
+    .slots-label { font-size:10px; color:#8892a4; margin-top:2px; }
+    .loc-type-badge {
+      display:inline-block; padding:2px 8px; border-radius:10px;
+      font-size:10px; font-weight:700; margin-top:6px; text-transform:uppercase;
+    }
+    #map { width:100%; height:100%; z-index:1; }
+    .slot-modal-overlay {
+      display:none; position:fixed; top:0; left:0;
+      width:100%; height:100%;
+      background:rgba(15,23,42,0.55);
+      backdrop-filter:blur(3px);
+      z-index:9999; align-items:center; justify-content:center;
+    }
+    .slot-modal {
+      background:white; border-radius:20px; padding:28px;
+      width:90%; max-width:520px; max-height:85vh;
+      overflow-y:auto; animation:slideUp 0.25s ease;
+    }
+    @keyframes slideUp {
+      from { opacity:0; transform:translateY(20px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    .modal-loc-header {
+      display:flex; align-items:center; gap:14px;
+      margin-bottom:20px; padding-bottom:16px;
+      border-bottom:1px solid #e2e8f0;
+    }
+    .modal-loc-icon {
+      width:52px; height:52px; border-radius:14px;
+      display:flex; align-items:center; justify-content:center; font-size:26px;
+    }
+    .modal-loc-name { font-size:18px; font-weight:700; }
+    .modal-loc-addr { font-size:13px; color:#8892a4; margin-top:2px; }
+    .modal-slots-grid {
+      display:grid; grid-template-columns:repeat(auto-fill,minmax(90px,1fr));
+      gap:10px; margin-bottom:20px;
+    }
+    .type-mall       { background:#e8f0fe; color:#1a73e8; }
+    .type-hospital   { background:#fce8e6; color:#c62828; }
+    .type-hotel      { background:#fef3e2; color:#e65100; }
+    .type-restaurant { background:#f3e8ff; color:#7c3aed; }
+    .type-park       { background:#e6f4ea; color:#2e7d32; }
+    .type-other      { background:#f1f3f4; color:#5f6368; }
+    /* Leaflet popup custom style */
+    .leaflet-popup-content { margin:12px 16px; }
+    .map-popup h3 { font-size:15px; font-weight:700; margin-bottom:4px; color:#1a1a2e; font-family:'Inter',sans-serif; }
+    .map-popup p  { font-size:12px; color:#8892a4; margin-bottom:8px; font-family:'Inter',sans-serif; }
+    .map-popup .avail {
+      font-size:13px; font-weight:600;
+      padding:6px 10px; border-radius:8px;
+      margin-bottom:8px; text-align:center;
+    }
+    .map-popup .avail.ok   { background:#e6f4ea; color:#2e7d32; }
+    .map-popup .avail.full { background:#fce8e6; color:#c62828; }
+    .map-popup .book-btn {
+      display:block; width:100%; padding:8px; border:none;
+      background:#1a73e8; color:white; border-radius:8px;
+      font-size:13px; font-weight:600; cursor:pointer;
+      text-align:center; font-family:'Inter',sans-serif;
+    }
+    .map-popup .book-btn:hover { background:#1557b0; }
+    @media (max-width:700px) {
+      .map-page { grid-template-columns:1fr; grid-template-rows:50vh 1fr; }
+      #map { height:50vh; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Page loader — paste at top of every page body -->
+<div id="page-loader">
+  <div class="loader-icon">🅿️</div>
+  <div class="loader-title">SmartPark</div>
+  <div class="loader-track">
+    <div class="loader-fill"></div>
+  </div>
+  <div class="loader-dots">
+    <div class="loader-dot"></div>
+    <div class="loader-dot"></div>
+    <div class="loader-dot"></div>
+  </div>
+</div>
+
+<!-- Floating particles background -->
+<div class="particles-container"></div>
+
+<!-- Scroll to top button -->
+<button id="scroll-top">↑</button>
+
+<nav class="navbar">
+  <h2>🅿️ Smart<span>Park</span></h2>
+  <div class="nav-links">
+    <a href="dashboard.html">Dashboard</a>
+    <a href="map.html" class="active">Find Parking</a>
+    <a href="my-bookings.html">My Bookings</a>
+    <a href="my-vehicles.html">My Vehicles</a>
+    <a href="profile.html">Profile</a>
+  </div>
+  <div style="display:flex;align-items:center;">
+    <div class="nav-user">
+      <div class="nav-avatar" id="navAvatar">U</div>
+      <span class="nav-name"  id="navName"></span>
+    </div>
+    <button class="btn-logout" onclick="logout()">Logout</button>
+  </div>
+</nav>
+
+<div class="map-page">
+
+  <!-- Left Panel -->
+  <div class="map-panel">
+    <div class="map-panel-header">
+      <h3>🗺️ Find Parking Near</h3>
+      <div class="search-wrap" style="margin-bottom:12px;">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="locSearch"
+               placeholder="Search locations..."
+               oninput="filterLocations()">
+      </div>
+      <div class="type-filters">
+        <div class="type-pill active" onclick="setType('all',this)">All</div>
+        <div class="type-pill" onclick="setType('mall',this)">🏬 Mall</div>
+        <div class="type-pill" onclick="setType('hospital',this)">🏥 Hospital</div>
+        <div class="type-pill" onclick="setType('hotel',this)">🏨 Hotel</div>
+        <div class="type-pill" onclick="setType('restaurant',this)">🍽️ Restaurant</div>
+        <div class="type-pill" onclick="setType('park',this)">🌳 Park</div>
+      </div>
+    </div>
+    <div class="location-list" id="locationList">
+      <div style="text-align:center;padding:40px 20px;color:#8892a4;">
+        <div style="font-size:32px;margin-bottom:8px;">🗺️</div>
+        Loading locations...
+      </div>
+    </div>
+  </div>
+
+  <!-- Map -->
+  <div id="map"></div>
+
+</div>
+
+<!-- Slot Booking Modal -->
+<div class="slot-modal-overlay" id="slotModal">
+  <div class="slot-modal">
+    <div class="modal-loc-header">
+      <div class="modal-loc-icon" id="modalLocIcon"></div>
+      <div>
+        <div class="modal-loc-name" id="modalLocName"></div>
+        <div class="modal-loc-addr" id="modalLocAddr"></div>
+      </div>
+    </div>
+    <div id="modalSlotInfo" style="margin-bottom:16px;"></div>
+    <div class="filter-tabs" id="modalFloorTabs" style="margin-bottom:14px;"></div>
+    <div class="modal-slots-grid" id="modalSlotsGrid"></div>
+    <div id="vehicleSection" style="display:none;">
+      <hr style="border:none;border-top:1px solid #e2e8f0;margin:16px 0;">
+      <div style="font-size:14px;font-weight:600;margin-bottom:12px;">
+        Selected: Slot <span id="selectedSlotName" style="color:#1a73e8;"></span>
+      </div>
+      <div class="alert alert-error" id="modalError"></div>
+      <div class="form-group">
+        <label>Select Saved Vehicle</label>
+        <div id="savedVehiclesList"
+             style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;"></div>
+      </div>
+      <div class="form-group">
+        <label>Vehicle Number</label>
+        <input class="form-control" type="text" id="modalVehicleNum"
+               placeholder="e.g. TN01AB1234">
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-primary" style="flex:1;"
+                onclick="confirmBooking()">✅ Confirm Booking</button>
+        <button class="btn btn-ghost"   style="flex:1;"
+                onclick="closeModal()">Cancel</button>
+      </div>
+    </div>
+    <div id="closeSection">
+      <button class="btn btn-ghost btn-block"
+              style="margin-top:8px;" onclick="closeModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="../script.js"></script>
+<script>
+  const user = JSON.parse(localStorage.getItem('user'));
+  if (!user) window.location.href = '../index.html';
+  document.getElementById('navName').textContent   = user.name;
+  document.getElementById('navAvatar').textContent = user.name.charAt(0).toUpperCase();
+
+  // ── State ──
+  let allLocations   = [];
+  let filteredLocs   = [];
+  let currentType    = 'all';
+  let selectedLocId  = null;
+  let selectedSlotId = null;
+  let markers        = {};
+  let map, currentPopup;
+
+  // ── Type config ──
+  const typeConfig = {
+    mall      : { icon:'🏬', color:'#1a73e8' },
+    hospital  : { icon:'🏥', color:'#c62828' },
+    hotel     : { icon:'🏨', color:'#e65100' },
+    restaurant: { icon:'🍽️', color:'#7c3aed' },
+    park      : { icon:'🌳', color:'#2e7d32' },
+    other     : { icon:'📍', color:'#5f6368' }
+  };
+
+  // ── Init Leaflet Map ──
+  map = L.map('map').setView([10.8231, 78.6872], 13);
+
+  // OpenStreetMap tiles — completely free
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+    maxZoom: 19
+  }).addTo(map);
+
+  // ── Load locations ──
+  async function loadLocations() {
+    allLocations = await apiGet('/locations');
+    filteredLocs = [...allLocations];
+    renderList();
+    renderMarkers();
+  }
+
+  // ── Render left list ──
+  function renderList() {
+    const search  = document.getElementById('locSearch').value.toLowerCase();
+    const visible = filteredLocs.filter(l =>
+      l.name.toLowerCase().includes(search) ||
+      l.address.toLowerCase().includes(search)
+    );
+
+    const container = document.getElementById('locationList');
+    if (visible.length === 0) {
+      container.innerHTML = `
+        <div style="text-align:center;padding:40px 20px;color:#8892a4;">
+          <div style="font-size:32px;margin-bottom:8px;">🔍</div>
+          <div>No locations found</div>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = visible.map(l => {
+      const cfg   = typeConfig[l.type] || typeConfig.other;
+      const free  = parseInt(l.available_slots) || 0;
+      const total = parseInt(l.total_slots)     || 0;
+      return `
+        <div class="loc-card ${selectedLocId===l.id?'selected':''}"
+             id="loccard-${l.id}" onclick="selectLocation(${l.id})">
+          <div class="loc-card-top">
+            <div class="loc-icon type-${l.type}">${cfg.icon}</div>
+            <div class="loc-info">
+              <div class="loc-name">${l.name}</div>
+              <div class="loc-addr">${l.address}</div>
+              <span class="loc-type-badge type-${l.type}">${l.type}</span>
+            </div>
+            <div class="loc-slots">
+              <div class="slots-free ${free===0?'none':''}">${free}</div>
+              <div class="slots-label">of ${total}<br>free</div>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // ── Render Leaflet markers ──
+  function renderMarkers() {
+    // Remove old markers
+    Object.values(markers).forEach(m => map.removeLayer(m));
+    markers = {};
+
+    filteredLocs.forEach(loc => {
+      const cfg  = typeConfig[loc.type] || typeConfig.other;
+      const free = parseInt(loc.available_slots) || 0;
+      const bg   = free > 0 ? cfg.color : '#c62828';
+
+      // Custom HTML icon
+      const icon = L.divIcon({
+        className : '',
+        html      : `
+          <div style="
+            background:${bg}; color:white;
+            padding:6px 10px; border-radius:12px;
+            font-size:12px; font-weight:700;
+            box-shadow:0 4px 12px rgba(0,0,0,0.25);
+            white-space:nowrap; border:2px solid white;
+            font-family:'Inter',sans-serif;
+            cursor:pointer;">
+            ${cfg.icon} ${free > 0 ? free+' free' : 'Full'}
+          </div>
+          <div style="
+            width:0; height:0;
+            border-left:7px solid transparent;
+            border-right:7px solid transparent;
+            border-top:9px solid ${bg};
+            margin:0 auto;">
+          </div>`,
+        iconSize   : [100, 45],
+        iconAnchor : [50, 45]
+      });
+
+      const marker = L.marker(
+        [parseFloat(loc.latitude), parseFloat(loc.longitude)],
+        { icon }
+      ).addTo(map);
+
+      // Popup content
+      const popupContent = `
+        <div class="map-popup">
+          <h3>${cfg.icon} ${loc.name}</h3>
+          <p>${loc.address}</p>
+          ${loc.description
+            ? `<p style="color:#555;font-style:italic;">${loc.description}</p>`
+            : ''}
+          <div class="avail ${free>0?'ok':'full'}">
+            ${free>0 ? `✅ ${free} slots available` : '🚫 No slots available'}
+          </div>
+          <button class="book-btn"
+                  onclick="openSlotModal(${loc.id})">
+            🅿️ View & Book Slots
+          </button>
+        </div>`;
+
+      marker.bindPopup(popupContent, { maxWidth: 240 });
+
+      marker.on('click', () => {
+        selectLocation(loc.id);
+      });
+
+      markers[loc.id] = marker;
+    });
+  }
+
+  // ── Select location ──
+  function selectLocation(locId) {
+    selectedLocId = locId;
+    const loc = allLocations.find(l => l.id === locId);
+    if (!loc) return;
+
+    // Highlight card
+    document.querySelectorAll('.loc-card').forEach(c => c.classList.remove('selected'));
+    const card = document.getElementById(`loccard-${locId}`);
+    if (card) {
+      card.classList.add('selected');
+      card.scrollIntoView({ behavior:'smooth', block:'nearest' });
+    }
+
+    // Pan map and open popup
+    map.setView([parseFloat(loc.latitude), parseFloat(loc.longitude)], 15);
+    if (markers[locId]) markers[locId].openPopup();
+  }
+
+  // ── Filter by type ──
+  function setType(type, el) {
+    currentType  = type;
+    filteredLocs = type==='all'
+      ? [...allLocations]
+      : allLocations.filter(l => l.type===type);
+    document.querySelectorAll('.type-pill').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+    renderList();
+    renderMarkers();
+  }
+
+  // ── Search ──
+  function filterLocations() { renderList(); }
+
+  // ── Open slot modal ──
+  async function openSlotModal(locId) {
+    // Close leaflet popup
+    map.closePopup();
+    selectedLocId  = locId;
+    selectedSlotId = null;
+
+    const loc   = allLocations.find(l => l.id===locId);
+    const cfg   = typeConfig[loc.type] || typeConfig.other;
+    const slots = await apiGet(`/slots/location/${locId}`);
+
+    document.getElementById('modalLocIcon').textContent = cfg.icon;
+    document.getElementById('modalLocIcon').className  = `modal-loc-icon type-${loc.type}`;
+    document.getElementById('modalLocName').textContent = loc.name;
+    document.getElementById('modalLocAddr').textContent = loc.address;
+
+    const free  = slots.filter(s => s.status==='available').length;
+    const total = slots.length;
+
+    document.getElementById('modalSlotInfo').innerHTML = `
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <span class="slot-count blue">Total: ${total}</span>
+        <span class="slot-count green">Free: ${free}</span>
+        <span class="slot-count red">Occupied: ${total-free}</span>
+      </div>`;
+
+    // Floor tabs
+    const floors = [...new Set(slots.map(s=>s.floor).filter(Boolean))];
+    const tabsEl = document.getElementById('modalFloorTabs');
+    if (floors.length > 1) {
+      tabsEl.innerHTML =
+        `<div class="tab active"
+              onclick='filterModalSlots("All",this,${JSON.stringify(slots)})'>
+           All
+         </div>` +
+        floors.map(f =>
+          `<div class="tab"
+                onclick='filterModalSlots("${f}",this,${JSON.stringify(slots)})'>
+             ${f}
+           </div>`
+        ).join('');
+    } else {
+      tabsEl.innerHTML = '';
+    }
+
+    renderModalSlots(slots);
+
+    // Saved vehicles
+    const vehicles = await apiGet(`/vehicles/${user.id}`);
+    document.getElementById('savedVehiclesList').innerHTML =
+      vehicles.length === 0
+        ? '<p style="font-size:12px;color:#8892a4;">No saved vehicles</p>'
+        : vehicles.map(v => `
+            <div class="vehicle-card"
+                 style="flex-direction:row;padding:8px 12px;
+                        min-width:unset;cursor:pointer;"
+                 onclick="pickVehicle('${v.vehicle_number}',this)">
+              <span>${v.vehicle_type==='bike'?'🏍️':v.vehicle_type==='truck'?'🚛':'🚗'}</span>
+              <div>
+                <div style="font-size:12px;font-weight:700;">${v.vehicle_number}</div>
+                <div style="font-size:11px;color:#8892a4;">
+                  ${v.vehicle_name||v.vehicle_type}
+                </div>
+              </div>
+            </div>`).join('');
+
+    document.getElementById('vehicleSection').style.display = 'none';
+    document.getElementById('closeSection').style.display   = 'block';
+    document.getElementById('slotModal').style.display      = 'flex';
+  }
+
+  function filterModalSlots(floor, el, slots) {
+    document.querySelectorAll('#modalFloorTabs .tab')
+            .forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    const filtered = floor==='All' ? slots : slots.filter(s=>s.floor===floor);
+    renderModalSlots(filtered);
+  }
+
+  function renderModalSlots(slots) {
+    const grid = document.getElementById('modalSlotsGrid');
+    if (slots.length === 0) {
+      grid.innerHTML = `
+        <div style="grid-column:1/-1;text-align:center;
+                    padding:20px;color:#8892a4;">
+          No slots added for this location yet
+        </div>`;
+      return;
+    }
+    grid.innerHTML = slots.map(s => `
+      <div class="slot ${s.status}"
+           onclick="${s.status==='available'
+             ? `pickSlot(${s.id},'${s.slot_number}')`
+             : ''}">
+        <div class="slot-num">${s.slot_number}</div>
+        <div class="slot-floor">${s.floor||''}</div>
+      </div>`).join('');
+  }
+
+  function pickSlot(slotId, slotName) {
+    selectedSlotId = slotId;
+    document.getElementById('selectedSlotName').textContent  = slotName;
+    document.getElementById('vehicleSection').style.display  = 'block';
+    document.getElementById('closeSection').style.display    = 'none';
+    document.getElementById('modalVehicleNum').value         = '';
+    document.getElementById('modalError').style.display      = 'none';
+    document.querySelectorAll('.modal-slots-grid .slot')
+            .forEach(s => s.style.outline = 'none');
+    event.target.closest('.slot').style.outline = '3px solid #1a73e8';
+  }
+
+  function pickVehicle(number, el) {
+    document.querySelectorAll('#savedVehiclesList .vehicle-card')
+            .forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('modalVehicleNum').value = number;
+  }
+
+  async function confirmBooking() {
+    const vehicle = document.getElementById('modalVehicleNum').value.trim();
+    if (!vehicle) {
+      showAlert('modalError','Please enter or select a vehicle number');
+      return;
+    }
+    if (!selectedSlotId) {
+      showAlert('modalError','Please select a slot');
+      return;
+    }
+    const now  = new Date().toISOString().slice(0,19).replace('T',' ');
+    const data = await apiPost('/bookings', {
+      user_id       : user.id,
+      slot_id       : selectedSlotId,
+      vehicle_number: vehicle,
+      start_time    : now
+    });
+    if (data.message) {
+      closeModal();
+      window.location.href = `payment.html?id=${data.bookingId}`;
+    } else {
+      showAlert('modalError', data.error);
+    }
+  }
+
+  function closeModal() {
+    document.getElementById('slotModal').style.display = 'none';
+    selectedSlotId = null;
+  }
+
+  // ── Start ──
+  loadLocations();
+</script>
+<script src="../app.js"></script>
+</body>
+</html>

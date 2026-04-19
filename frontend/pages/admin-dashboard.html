@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <link rel="stylesheet" href="../animations.css">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard — Smart Parking</title>
@@ -8,15 +9,35 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 </head>
 <body>
+  <!-- Page loader — paste at top of every page body -->
+<div id="page-loader">
+  <div class="loader-icon">🅿️</div>
+  <div class="loader-title">SmartPark</div>
+  <div class="loader-track">
+    <div class="loader-fill"></div>
+  </div>
+  <div class="loader-dots">
+    <div class="loader-dot"></div>
+    <div class="loader-dot"></div>
+    <div class="loader-dot"></div>
+  </div>
+</div>
+
+<!-- Floating particles background -->
+<div class="particles-container"></div>
+
+<!-- Scroll to top button -->
+<button id="scroll-top">↑</button>
 
 <nav class="navbar">
   <h2>🅿️ Smart<span>Park</span> <span style="font-size:11px;background:rgba(255,255,255,0.2);padding:2px 8px;border-radius:10px;margin-left:6px;">ADMIN</span></h2>
   <div class="nav-links">
-    <a href="admin-dashboard.html" class="active">Dashboard</a>
-    <a href="admin-slots.html">Manage Slots</a>
-    <a href="admin-bookings.html">Bookings</a>
-    <a href="admin-users.html">Users</a>
-  </div>
+  <a href="admin-dashboard.html" class="active">Dashboard</a>
+  <a href="admin-slots.html">Manage Slots</a>
+  <a href="admin-bookings.html">Bookings</a>
+  <a href="admin-users.html">Users</a>
+  <a href="admin-locations.html">📍 Locations</a>
+</div>
   <div style="display:flex;align-items:center;">
     <div class="nav-user">
       <div class="nav-avatar" id="navAvatar">A</div>
@@ -35,14 +56,14 @@
   <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:24px;">
 
     <!-- Bookings chart -->
-    <div class="card">
+    <div class="card reveal-section">
       <div class="card-title">Bookings — Last 7 Days</div>
       <div class="card-subtitle">Daily booking activity</div>
       <canvas id="bookingsChart" height="200"></canvas>
     </div>
 
     <!-- Slot status chart -->
-    <div class="card">
+    <div class="card reveal-section">
       <div class="card-title">Slot Status</div>
       <div class="card-subtitle">Current slot distribution</div>
       <canvas id="slotChart" height="200"></canvas>
@@ -51,7 +72,7 @@
   </div>
 
   <!-- Recent bookings -->
-  <div class="card">
+  <div class="card reveal-section">
     <div class="card-title">Recent Bookings</div>
     <div class="card-subtitle">Latest 10 bookings across all users</div>
     <div class="table-wrap">
@@ -88,27 +109,45 @@
     document.getElementById('statsGrid').innerHTML = `
   <div class="stat-card">
     <div class="stat-icon blue">👥</div>
-    <div class="stat-info"><div class="number">${stats.totalUsers}</div><div class="label">Total Users</div></div>
+    <div class="stat-info">
+      <div class="number" id="totalUsers" data-count="${stats.totalUsers}">${stats.totalUsers}</div>
+      <div class="label">Total Users</div>
+    </div>
   </div>
   <div class="stat-card">
     <div class="stat-icon blue">🅿️</div>
-    <div class="stat-info"><div class="number">${stats.totalSlots}</div><div class="label">Total Slots</div></div>
+    <div class="stat-info">
+      <div class="number" id="totalSlots" data-count="${stats.totalSlots}">${stats.totalSlots}</div>
+      <div class="label">Total Slots</div>
+    </div>
   </div>
   <div class="stat-card">
     <div class="stat-icon green">✅</div>
-    <div class="stat-info"><div class="number">${stats.availableSlots}</div><div class="label">Available</div></div>
+    <div class="stat-info">
+      <div class="number" id="availableSlots" data-count="${stats.availableSlots}">${stats.availableSlots}</div>
+      <div class="label">Available</div>
+    </div>
   </div>
   <div class="stat-card">
     <div class="stat-icon red">🚫</div>
-    <div class="stat-info"><div class="number">${stats.occupiedSlots}</div><div class="label">Occupied</div></div>
+    <div class="stat-info">
+      <div class="number" id="occupiedSlots" data-count="${stats.occupiedSlots}">${stats.occupiedSlots}</div>
+      <div class="label">Occupied</div>
+    </div>
   </div>
   <div class="stat-card">
     <div class="stat-icon orange">📋</div>
-    <div class="stat-info"><div class="number">${stats.activeBookings}</div><div class="label">Active Bookings</div></div>
+    <div class="stat-info">
+      <div class="number" id="activeBookings" data-count="${stats.activeBookings}">${stats.activeBookings}</div>
+      <div class="label">Active Bookings</div>
+    </div>
   </div>
   <div class="stat-card">
     <div class="stat-icon green">💰</div>
-    <div class="stat-info"><div class="number">₹${stats.totalRevenue}</div><div class="label">Total Revenue</div></div>
+    <div class="stat-info">
+      <div class="number" id="totalRevenue" data-count="${stats.totalRevenue}">₹${stats.totalRevenue}</div>
+      <div class="label">Total Revenue</div>
+    </div>
   </div>
 `;
 
@@ -169,5 +208,6 @@
 
   loadDashboard();
 </script>
+<script src="../app.js"></script>
 </body>
 </html>
