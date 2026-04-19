@@ -1,11 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <link rel="stylesheet" href="../animations.css">
   <meta charset="UTF-8">
   <title>Profile — Smart Parking</title>
   <link rel="stylesheet" href="../style.css">
 </head>
 <body>
+  <!-- Page loader — paste at top of every page body -->
+<div id="page-loader">
+  <div class="loader-icon">🅿️</div>
+  <div class="loader-title">SmartPark</div>
+  <div class="loader-track">
+    <div class="loader-fill"></div>
+  </div>
+  <div class="loader-dots">
+    <div class="loader-dot"></div>
+    <div class="loader-dot"></div>
+    <div class="loader-dot"></div>
+  </div>
+</div>
+
+<!-- Floating particles background -->
+<div class="particles-container"></div>
+
+<!-- Scroll to top button -->
+<button id="scroll-top">↑</button>
 
 <nav class="navbar">
   <h2>🅿️ Smart<span>Park</span></h2>
@@ -25,7 +45,7 @@
 </nav>
 
 <div class="page" style="max-width:500px;">
-  <div class="card">
+  <div class="card reveal-section">
     <div class="profile-banner"></div>
     <div class="profile-avatar" id="profileAvatar">U</div>
     <div class="profile-name"  id="profileName">-</div>
@@ -85,5 +105,6 @@
     } else { showAlert('errorMsg', data.error); }
   }
 </script>
+<script src="../app.js"></script>
 </body>
 </html>

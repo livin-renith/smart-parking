@@ -75,14 +75,18 @@ exports.getBookingsChart = (req, res) => {
 
 // Add a new parking slot
 exports.addSlot = (req, res) => {
-  const { slot_number, floor } = req.body;
+  const { slot_number, floor, location_id } = req.body;
   if (!slot_number || !floor)
     return res.status(400).json({ error: 'Slot number and floor are required' });
-  db.query('INSERT INTO parking_slots (slot_number, floor) VALUES (?, ?)',
-    [slot_number, floor], (err, result) => {
+
+  db.query(
+    'INSERT INTO parking_slots (slot_number, floor, location_id) VALUES (?, ?, ?)',
+    [slot_number, floor, location_id || null],
+    (err, result) => {
       if (err) return res.status(500).json({ error: 'Slot number already exists' });
       res.json({ message: '✅ Slot added successfully!', id: result.insertId });
-    });
+    }
+  );
 };
 
 // Delete a slot

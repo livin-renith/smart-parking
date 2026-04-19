@@ -1,21 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <link rel="stylesheet" href="../animations.css">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard — Smart Parking</title>
   <link rel="stylesheet" href="../style.css">
 </head>
 <body>
+  <!-- Page loader — paste at top of every page body -->
+<div id="page-loader">
+  <div class="loader-icon">🅿️</div>
+  <div class="loader-title">SmartPark</div>
+  <div class="loader-track">
+    <div class="loader-fill"></div>
+  </div>
+  <div class="loader-dots">
+    <div class="loader-dot"></div>
+    <div class="loader-dot"></div>
+    <div class="loader-dot"></div>
+  </div>
+</div>
+
+<!-- Floating particles background -->
+<div class="particles-container"></div>
+
+<!-- Scroll to top button -->
+<button id="scroll-top">↑</button>
 
 <nav class="navbar">
   <h2>🅿️ Smart<span>Park</span></h2>
   <div class="nav-links">
-    <a href="dashboard.html"  class="active">Dashboard</a>
-    <a href="my-bookings.html">My Bookings</a>
-    <a href="my-vehicles.html">My Vehicles</a>
-    <a href="profile.html">Profile</a>
-  </div>
+  <a href="dashboard.html" class="active">Dashboard</a>
+  <a href="map.html">Find Parking</a>
+  <a href="my-bookings.html">My Bookings</a>
+  <a href="my-vehicles.html">My Vehicles</a>
+  <a href="profile.html">Profile</a>
+</div>
   <div style="display:flex; align-items:center;">
     <div class="nav-user">
       <div class="nav-avatar" id="navAvatar">U</div>
@@ -31,7 +52,7 @@
   <div class="stats-grid" id="statsRow"></div>
 
   <!-- Slots card -->
-  <div class="card">
+  <div class="card reveal-section">
     <div class="card-title">Parking Slots</div>
     <div class="card-subtitle">Click any available slot to book it instantly</div>
 
@@ -103,30 +124,46 @@
   }
 
   function buildStats() {
-    const total     = allSlots.length;
-    const available = allSlots.filter(s => s.status === 'available').length;
-    const occupied  = allSlots.filter(s => s.status === 'occupied').length;
-    const reserved  = allSlots.filter(s => s.status === 'reserved').length;
+  const total     = allSlots.length;
+  const available = allSlots.filter(s => s.status === 'available').length;
+  const occupied  = allSlots.filter(s => s.status === 'occupied').length;
+  const reserved  = allSlots.filter(s => s.status === 'reserved').length;
 
-    document.getElementById('statsRow').innerHTML = `
-      <div class="stat-card">
-        <div class="stat-icon blue">🅿️</div>
-        <div class="stat-info"><div class="number">${total}</div><div class="label">Total Slots</div></div>
+  document.getElementById('statsRow').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-icon blue">🅿️</div>
+      <div class="stat-info">
+        <div class="number" id="statTotal"
+             data-count="${total}">${total}</div>
+        <div class="label">Total Slots</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon green">✅</div>
-        <div class="stat-info"><div class="number">${available}</div><div class="label">Available</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon green">✅</div>
+      <div class="stat-info">
+        <div class="number" id="statAvailable"
+             data-count="${available}">${available}</div>
+        <div class="label">Available</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon red">🚫</div>
-        <div class="stat-info"><div class="number">${occupied}</div><div class="label">Occupied</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon red">🚫</div>
+      <div class="stat-info">
+        <div class="number" id="statOccupied"
+             data-count="${occupied}">${occupied}</div>
+        <div class="label">Occupied</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon orange">⏳</div>
-        <div class="stat-info"><div class="number">${reserved}</div><div class="label">Reserved</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon orange">⏳</div>
+      <div class="stat-info">
+        <div class="number" id="statReserved"
+             data-count="${reserved}">${reserved}</div>
+        <div class="label">Reserved</div>
       </div>
-    `;
-  }
+    </div>
+  `;
+}
 
   function buildFloorTabs() {
     const floors = [...new Set(allSlots.map(s => s.floor))];
@@ -217,5 +254,6 @@
 
   loadSlots();
 </script>
+<script src="../app.js"></script>
 </body>
 </html>
