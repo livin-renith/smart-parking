@@ -2,14 +2,13 @@ const mysql = require('mysql2');
 const bcrypt = require('bcryptjs');
 
 const db = mysql.createConnection({
-  host    : 'monorail.proxy.rlwy.net',
+  host    : 'roundhouse.proxy.rlwy.net',
   user    : 'root',
-  password: 'wBtbqLhkXaZkonNZSLuxamejcrLXqEje',
+  password: 'nXBqqowgAtGAzKMFxPRskrAqFbwDhBhh',
   database: 'railway',
-  port    : 15678,
+  port    : 48287,
   ssl     : { rejectUnauthorized: false }
 });
-
 db.connect(async (err) => {
   if (err) { console.log('❌ Connection failed:', err.message); return; }
   console.log('✅ Connected to Railway MySQL!');
