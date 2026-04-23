@@ -1,75 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="stylesheet" href="../animations.css">
   <meta charset="UTF-8">
-  <title>Manage Users — Admin</title>
-  <link rel="stylesheet" href="../style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Users — SmartPark Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../animations.css">
+  <link rel="stylesheet" href="../premium.css">
 </head>
-<body>
-  <!-- Page loader — paste at top of every page body -->
+<body class="p-bg">
+
 <div id="page-loader">
   <div class="loader-icon">🅿️</div>
-  <div class="loader-title">SmartPark</div>
-  <div class="loader-track">
-    <div class="loader-fill"></div>
-  </div>
+  <div class="loader-title">SmartPark Admin</div>
+  <div class="loader-track"><div class="loader-fill"></div></div>
   <div class="loader-dots">
     <div class="loader-dot"></div>
     <div class="loader-dot"></div>
     <div class="loader-dot"></div>
   </div>
 </div>
-
-<!-- Floating particles background -->
 <div class="particles-container"></div>
-
-<!-- Scroll to top button -->
 <button id="scroll-top">↑</button>
 
-<nav class="navbar">
-  <h2>🅿️ Smart<span>Park</span> <span style="font-size:11px;background:rgba(255,255,255,0.2);padding:2px 8px;border-radius:10px;margin-left:6px;">ADMIN</span></h2>
-  <div class="nav-links">
-  <a href="admin-dashboard.html" class="active">Dashboard</a>
-  <a href="admin-slots.html">Manage Slots</a>
-  <a href="admin-bookings.html">Bookings</a>
-  <a href="admin-users.html">Users</a>
-  <a href="admin-locations.html">📍 Locations</a>
-</div>
+<nav class="p-navbar">
+  <a href="admin-dashboard.html" class="p-navbar-logo">
+    <div class="p-logo-icon">🅿️</div>
+    SmartPark
+    <span style="font-size:10px;background:rgba(139,92,246,0.3);color:#c4b5fd;
+                 padding:2px 8px;border-radius:10px;border:1px solid rgba(139,92,246,0.3);">ADMIN</span>
+  </a>
+  <div class="p-nav-links">
+    <a href="admin-dashboard.html" class="p-nav-link">Dashboard</a>
+    <a href="admin-slots.html"     class="p-nav-link">Slots</a>
+    <a href="admin-bookings.html"  class="p-nav-link">Bookings</a>
+    <a href="admin-users.html"     class="p-nav-link active">Users</a>
+    <a href="admin-locations.html" class="p-nav-link">Locations</a>
+  </div>
   <div style="display:flex;align-items:center;">
-    <div class="nav-user">
-      <div class="nav-avatar">A</div>
-      <span class="nav-name" id="navName">Admin</span>
+    <div class="p-nav-user">
+      <div class="p-nav-avatar">A</div>
+      <span class="p-nav-name" id="navName">Admin</span>
     </div>
-    <button class="btn-logout" onclick="logout()">Logout</button>
+    <button class="p-btn-logout" onclick="logout()">Logout</button>
   </div>
 </nav>
 
-<div class="page">
-  <div class="card reveal-section">
-    <div class="card-title">All Users</div>
-    <div class="card-subtitle" id="userCount">Loading...</div>
+<div style="max-width:1080px;margin:32px auto;padding:0 24px;">
+  <div class="glass-card">
+    <div class="p-section-tag">Manage</div>
+    <div class="p-section-title">All Users</div>
+    <p class="p-section-sub" id="userCount">Loading...</p>
 
-    <!-- Search -->
-    <div class="search-wrap" style="margin-bottom:16px;">
-      <span class="search-icon">🔍</span>
-      <input type="text" id="searchInput" placeholder="Search by name or email..." oninput="renderUsers()">
+    <div class="p-search-wrap">
+      <span class="p-search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="Search by name or email..."
+             oninput="renderUsers()">
     </div>
 
-    <div class="table-wrap">
-      <table>
+    <div class="p-table-wrap">
+      <table class="p-table">
         <thead>
-          <tr>
-            <th>#</th>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Role</th>
-            <th>Total Bookings</th>
-            <th>Registered At</th>
-          </tr>
+          <tr><th>#</th><th>Name</th><th>Email</th><th>Role</th><th>Bookings</th><th>Registered</th></tr>
         </thead>
         <tbody id="usersTable">
-          <tr><td colspan="6" style="text-align:center;color:#8892a4;">Loading...</td></tr>
+          <tr><td colspan="6" style="text-align:center;color:var(--p-text3);padding:24px;">Loading...</td></tr>
         </tbody>
       </table>
     </div>
@@ -77,42 +73,45 @@
 </div>
 
 <script src="../script.js"></script>
+<script src="../app.js"></script>
 <script>
   let allUsers = [];
   const user = JSON.parse(localStorage.getItem('user'));
-  if (!user || user.role !== 'admin') window.location.href = '../index.html';
+  if (!user||user.role!=='admin') window.location.href='../index.html';
   document.getElementById('navName').textContent = user.name;
+  function logout() { localStorage.clear(); window.location.href='../index.html'; }
 
   function renderUsers() {
     const search = document.getElementById('searchInput').value.toLowerCase();
-    const list = allUsers.filter(u =>
-      u.name.toLowerCase().includes(search) ||
+    const list   = allUsers.filter(u=>
+      u.name.toLowerCase().includes(search)||
       u.email.toLowerCase().includes(search)
     );
     document.getElementById('userCount').textContent = `${list.length} users found`;
     const tbody = document.getElementById('usersTable');
-    if (list.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#8892a4;">No users found</td></tr>';
+    if (!list.length) {
+      tbody.innerHTML=`<tr><td colspan="6" style="text-align:center;color:var(--p-text3);padding:24px;">No users found</td></tr>`;
       return;
     }
-    tbody.innerHTML = list.map((u, i) => `
+    tbody.innerHTML = list.map((u,i)=>`
       <tr>
-        <td style="color:#8892a4;">${i+1}</td>
+        <td style="color:var(--p-text3);">${i+1}</td>
         <td>
           <div style="display:flex;align-items:center;gap:10px;">
-            <div style="width:34px;height:34px;border-radius:50%;background:#e8f0fe;color:#1a73e8;
-                        display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;">
+            <div style="width:36px;height:36px;border-radius:50%;
+                        background:linear-gradient(135deg,#4f8ef7,#8b5cf6);
+                        color:#fff;display:flex;align-items:center;justify-content:center;
+                        font-weight:700;font-size:14px;flex-shrink:0;">
               ${u.name.charAt(0).toUpperCase()}
             </div>
-            <strong>${u.name}</strong>
+            <strong style="color:var(--p-text);">${u.name}</strong>
           </div>
         </td>
-        <td>${u.email}</td>
-        <td><span class="badge badge-${u.role}">${u.role}</span></td>
-        <td style="text-align:center;"><strong>${u.total_bookings}</strong></td>
+        <td style="color:var(--p-text2);">${u.email}</td>
+        <td><span class="p-badge p-badge-${u.role}">${u.role}</span></td>
+        <td style="text-align:center;"><strong style="color:var(--p-text);">${u.total_bookings}</strong></td>
         <td>${new Date(u.created_at).toLocaleDateString()}</td>
-      </tr>
-    `).join('');
+      </tr>`).join('');
   }
 
   async function load() {
@@ -121,6 +120,5 @@
   }
   load();
 </script>
-<script src="../app.js"></script>
 </body>
 </html>

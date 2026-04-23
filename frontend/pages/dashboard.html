@@ -1,80 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="stylesheet" href="../animations.css">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard — Smart Parking</title>
-  <link rel="stylesheet" href="../style.css">
+  <title>Dashboard — SmartPark</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../animations.css">
+  <link rel="stylesheet" href="../premium.css">
 </head>
-<body>
-  <!-- Page loader — paste at top of every page body -->
+<body class="p-bg">
+
 <div id="page-loader">
   <div class="loader-icon">🅿️</div>
   <div class="loader-title">SmartPark</div>
-  <div class="loader-track">
-    <div class="loader-fill"></div>
-  </div>
+  <div class="loader-track"><div class="loader-fill"></div></div>
   <div class="loader-dots">
     <div class="loader-dot"></div>
     <div class="loader-dot"></div>
     <div class="loader-dot"></div>
   </div>
 </div>
-
-<!-- Floating particles background -->
 <div class="particles-container"></div>
-
-<!-- Scroll to top button -->
 <button id="scroll-top">↑</button>
 
-<nav class="navbar">
-  <h2>🅿️ Smart<span>Park</span></h2>
-  <div class="nav-links">
-  <a href="dashboard.html" class="active">Dashboard</a>
-  <a href="map.html">Find Parking</a>
-  <a href="my-bookings.html">My Bookings</a>
-  <a href="my-vehicles.html">My Vehicles</a>
-  <a href="profile.html">Profile</a>
+<div class="p-marquee-wrap">
+  <div class="p-marquee-track">
+    <div class="p-marquee-item"><div class="p-marquee-dot"></div>Real-time Parking</div>
+    <div class="p-marquee-item"><div class="p-marquee-dot"></div>Instant Booking</div>
+    <div class="p-marquee-item"><div class="p-marquee-dot"></div>Secure Payment</div>
+    <div class="p-marquee-item"><div class="p-marquee-dot"></div>Live Availability</div>
+    <div class="p-marquee-item"><div class="p-marquee-dot"></div>SmartPark Trichy</div>
+    <div class="p-marquee-item"><div class="p-marquee-dot"></div>Find Parking Near You</div>
+    <div class="p-marquee-item"><div class="p-marquee-dot"></div>Real-time Parking</div>
+    <div class="p-marquee-item"><div class="p-marquee-dot"></div>Instant Booking</div>
+    <div class="p-marquee-item"><div class="p-marquee-dot"></div>Secure Payment</div>
+    <div class="p-marquee-item"><div class="p-marquee-dot"></div>Live Availability</div>
+    <div class="p-marquee-item"><div class="p-marquee-dot"></div>SmartPark Trichy</div>
+    <div class="p-marquee-item"><div class="p-marquee-dot"></div>Find Parking Near You</div>
+  </div>
 </div>
-  <div style="display:flex; align-items:center;">
-    <div class="nav-user">
-      <div class="nav-avatar" id="navAvatar">U</div>
-      <span class="nav-name"  id="navName">User</span>
+
+<nav class="p-navbar">
+  <a href="dashboard.html" class="p-navbar-logo">
+    <div class="p-logo-icon">🅿️</div>
+    SmartPark
+  </a>
+  <div class="p-nav-links">
+    <a href="dashboard.html"   class="p-nav-link active">Dashboard</a>
+    <a href="map.html"         class="p-nav-link">Find Parking</a>
+    <a href="my-bookings.html" class="p-nav-link">My Bookings</a>
+    <a href="my-vehicles.html" class="p-nav-link">My Vehicles</a>
+    <a href="profile.html"     class="p-nav-link">Profile</a>
+  </div>
+  <div style="display:flex;align-items:center;">
+    <div class="p-nav-user">
+      <div class="p-nav-avatar" id="navAvatar">U</div>
+      <span class="p-nav-name" id="navName"></span>
     </div>
-    <button class="btn-logout" onclick="logout()">Logout</button>
+    <button class="p-btn-logout" onclick="logout()">Logout</button>
   </div>
 </nav>
 
-<div class="page">
+<div style="max-width:1080px;margin:32px auto;padding:0 24px;">
 
-  <!-- Slot counts -->
-  <div class="stats-grid" id="statsRow"></div>
+  <div class="p-stats-grid" id="statsRow"></div>
 
-  <!-- Slots card -->
-  <div class="card reveal-section">
-    <div class="card-title">Parking Slots</div>
-    <div class="card-subtitle">Click any available slot to book it instantly</div>
+  <div class="glass-card reveal-section">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+      <div>
+        <div class="p-section-tag">Live</div>
+        <div class="p-section-title">Parking Slots</div>
+      </div>
+      <div class="p-live-badge"><div class="p-live-dot"></div>Live</div>
+    </div>
+    <p class="p-section-sub">Click any available green slot to book instantly</p>
 
-    <!-- Search -->
-    <div class="search-wrap">
-      <span class="search-icon">🔍</span>
+    <div class="p-search-wrap">
+      <span class="p-search-icon">🔍</span>
       <input type="text" id="searchInput" placeholder="Search slot number..." oninput="filterSlots()">
     </div>
 
-    <!-- Floor tabs -->
-    <div class="filter-tabs" id="floorTabs"></div>
+    <div class="p-filter-tabs" id="floorTabs"></div>
+    <div class="p-slot-counts" id="slotCounts"></div>
 
-    <!-- Legend -->
-    <div class="legend">
-      <div class="legend-item"><div class="dot green"></div> Available</div>
-      <div class="legend-item"><div class="dot red"></div> Occupied</div>
-      <div class="legend-item"><div class="dot orange"></div> Reserved</div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--p-text3);font-weight:600;">
+        <div style="width:10px;height:10px;border-radius:50%;background:#10b981;"></div>Available
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--p-text3);font-weight:600;">
+        <div style="width:10px;height:10px;border-radius:50%;background:#ef4444;"></div>Occupied
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--p-text3);font-weight:600;">
+        <div style="width:10px;height:10px;border-radius:50%;background:#f59e0b;"></div>Reserved
+      </div>
     </div>
 
-    <!-- Grid -->
-    <div class="slots-grid" id="slotsGrid">
-      <p style="color:#8892a4">Loading slots...</p>
+    <div class="p-slots-grid" id="slotsGrid">
+      <p style="color:var(--p-text3);">Loading slots...</p>
     </div>
   </div>
 
@@ -82,99 +105,80 @@
 
 <!-- Booking Modal -->
 <div class="modal-overlay" id="modal">
-  <div class="modal-box">
-    <div class="modal-title">Book Slot <span id="modalSlotName" style="color:#1a73e8"></span></div>
-    <div class="modal-sub">Select a saved vehicle or enter manually</div>
-
-    <div class="alert alert-error" id="modalError"></div>
-
-    <div class="form-group">
-      <label>Saved Vehicles</label>
-      <div id="modalVehicleList" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:4px;"></div>
+  <div style="background:var(--p-surface);border:1px solid var(--p-border);
+              border-radius:24px;padding:32px;width:90%;max-width:440px;
+              box-shadow:0 24px 80px rgba(0,0,0,0.5);">
+    <div style="font-size:20px;font-weight:800;color:var(--p-text);margin-bottom:4px;">
+      Book Slot <span id="modalSlotName" style="color:var(--p-blue);"></span>
     </div>
-
-    <div class="form-group">
-      <label>Vehicle Number</label>
-      <input class="form-control" type="text" id="vehicleNumber" placeholder="e.g. TN01AB1234">
+    <div style="font-size:13px;color:var(--p-text3);margin-bottom:20px;">
+      Select a saved vehicle or enter manually
     </div>
-
-    <div class="modal-actions">
-      <button class="btn btn-primary" style="flex:1" onclick="confirmBooking()">✅ Confirm</button>
-      <button class="btn btn-ghost"   style="flex:1" onclick="closeModal()">Cancel</button>
+    <div class="p-alert p-alert-error" id="modalError"></div>
+    <div class="p-form-group">
+      <label class="p-form-label">Saved Vehicles</label>
+      <div id="modalVehicleList" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;"></div>
+    </div>
+    <div class="p-form-group">
+      <label class="p-form-label">Vehicle Number</label>
+      <input class="p-form-input" type="text" id="vehicleNumber" placeholder="e.g. TN01AB1234">
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button class="p-btn p-btn-primary" style="flex:1;" onclick="confirmBooking()">✅ Confirm Booking</button>
+      <button class="p-btn p-btn-ghost"   style="flex:1;" onclick="closeModal()">Cancel</button>
     </div>
   </div>
 </div>
 
 <script src="../script.js"></script>
+<script src="../app.js"></script>
 <script>
-  let allSlots = [];
-  let selectedFloor = 'All';
-  let selectedSlotId = null;
+  let allSlots = [], selectedFloor = 'All', selectedSlotId = null;
   const user = JSON.parse(localStorage.getItem('user'));
   if (!user) window.location.href = '../index.html';
-
-  document.getElementById('navName').textContent  = user.name;
+  document.getElementById('navName').textContent   = user.name;
   document.getElementById('navAvatar').textContent = user.name.charAt(0).toUpperCase();
+
+  function showAlert(id, msg, type='error') {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = msg;
+    el.className = `p-alert p-alert-${type}`;
+    el.style.display = 'flex';
+    setTimeout(() => el.style.display='none', 4000);
+  }
 
   async function loadSlots() {
     allSlots = await apiGet('/slots');
-    buildStats();
-    buildFloorTabs();
-    renderSlots();
+    buildStats(); buildFloorTabs(); renderSlots();
   }
 
   function buildStats() {
-  const total     = allSlots.length;
-  const available = allSlots.filter(s => s.status === 'available').length;
-  const occupied  = allSlots.filter(s => s.status === 'occupied').length;
-  const reserved  = allSlots.filter(s => s.status === 'reserved').length;
-
-  document.getElementById('statsRow').innerHTML = `
-    <div class="stat-card">
-      <div class="stat-icon blue">🅿️</div>
-      <div class="stat-info">
-        <div class="number" id="statTotal"
-             data-count="${total}">${total}</div>
-        <div class="label">Total Slots</div>
-      </div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon green">✅</div>
-      <div class="stat-info">
-        <div class="number" id="statAvailable"
-             data-count="${available}">${available}</div>
-        <div class="label">Available</div>
-      </div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon red">🚫</div>
-      <div class="stat-info">
-        <div class="number" id="statOccupied"
-             data-count="${occupied}">${occupied}</div>
-        <div class="label">Occupied</div>
-      </div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon orange">⏳</div>
-      <div class="stat-info">
-        <div class="number" id="statReserved"
-             data-count="${reserved}">${reserved}</div>
-        <div class="label">Reserved</div>
-      </div>
-    </div>
-  `;
-}
+    const total     = allSlots.length;
+    const available = allSlots.filter(s=>s.status==='available').length;
+    const occupied  = allSlots.filter(s=>s.status==='occupied').length;
+    const reserved  = allSlots.filter(s=>s.status==='reserved').length;
+    document.getElementById('statsRow').innerHTML = `
+      <div class="p-stat-card"><div class="p-stat-icon blue">🅿️</div>
+        <div><div class="p-stat-num">${total}</div><div class="p-stat-label">Total Slots</div></div></div>
+      <div class="p-stat-card"><div class="p-stat-icon green">✅</div>
+        <div><div class="p-stat-num">${available}</div><div class="p-stat-label">Available</div></div></div>
+      <div class="p-stat-card"><div class="p-stat-icon red">🚫</div>
+        <div><div class="p-stat-num">${occupied}</div><div class="p-stat-label">Occupied</div></div></div>
+      <div class="p-stat-card"><div class="p-stat-icon cyan">⏳</div>
+        <div><div class="p-stat-num">${reserved}</div><div class="p-stat-label">Reserved</div></div></div>`;
+  }
 
   function buildFloorTabs() {
-    const floors = [...new Set(allSlots.map(s => s.floor))];
+    const floors = [...new Set(allSlots.map(s=>s.floor).filter(Boolean))];
     document.getElementById('floorTabs').innerHTML =
-      `<div class="tab active" onclick="setFloor('All',this)">All Floors</div>` +
-      floors.map(f => `<div class="tab" onclick="setFloor('${f}',this)">${f}</div>`).join('');
+      `<div class="p-tab active" onclick="setFloor('All',this)">All Floors</div>` +
+      floors.map(f=>`<div class="p-tab" onclick="setFloor('${f}',this)">${f}</div>`).join('');
   }
 
   function setFloor(floor, el) {
     selectedFloor = floor;
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.p-tab').forEach(t=>t.classList.remove('active'));
     el.classList.add('active');
     renderSlots();
   }
@@ -182,22 +186,30 @@
   function filterSlots() { renderSlots(); }
 
   function renderSlots() {
-    const search = document.getElementById('searchInput').value.toLowerCase();
-    const filtered = allSlots.filter(s =>
-      (selectedFloor === 'All' || s.floor === selectedFloor) &&
+    const search   = document.getElementById('searchInput').value.toLowerCase();
+    const filtered = allSlots.filter(s=>
+      (selectedFloor==='All'||s.floor===selectedFloor) &&
       s.slot_number.toLowerCase().includes(search)
     );
+    const free  = filtered.filter(s=>s.status==='available').length;
+    const taken = filtered.filter(s=>s.status!=='available').length;
+    document.getElementById('slotCounts').innerHTML = `
+      <span class="p-slot-count blue">Total: ${filtered.length}</span>
+      <span class="p-slot-count green">Free: ${free}</span>
+      <span class="p-slot-count red">Occupied: ${taken}</span>`;
     const grid = document.getElementById('slotsGrid');
-    if (filtered.length === 0) {
-      grid.innerHTML = '<div class="empty-state"><div class="icon">🔍</div><h3>No slots found</h3><p>Try a different search or floor</p></div>';
+    if (!filtered.length) {
+      grid.innerHTML=`<div class="p-empty"><div class="icon">🔍</div><h3>No slots found</h3></div>`;
       return;
     }
     grid.innerHTML = '';
-    filtered.forEach(slot => {
+    filtered.forEach((slot,i) => {
       const div = document.createElement('div');
-      div.className = `slot ${slot.status}`;
-      div.innerHTML = `<div class="slot-num">${slot.slot_number}</div><div class="slot-floor">${slot.floor}</div>`;
-      if (slot.status === 'available') div.onclick = () => openModal(slot.id, slot.slot_number);
+      div.className = `p-slot ${slot.status}`;
+      div.style.animationDelay = `${i*0.04}s`;
+      div.innerHTML = `<div class="p-slot-num">${slot.slot_number}</div>
+                       <div class="p-slot-floor">${slot.floor||''}</div>`;
+      if (slot.status==='available') div.onclick = ()=>openModal(slot.id,slot.slot_number);
       grid.appendChild(div);
     });
   }
@@ -209,51 +221,47 @@
     document.getElementById('modal').style.display = 'flex';
     const vehicles = await apiGet(`/vehicles/${user.id}`);
     const list = document.getElementById('modalVehicleList');
-    list.innerHTML = vehicles.length === 0
-      ? '<p style="font-size:13px;color:#8892a4;">No saved vehicles</p>'
-      : vehicles.map(v => `
-          <div class="vehicle-card" style="flex-direction:row; padding:10px 14px; min-width:unset;"
-               onclick="pickVehicle('${v.vehicle_number}', this)">
+    list.innerHTML = vehicles.length===0
+      ? `<p style="font-size:13px;color:var(--p-text3);">No saved vehicles</p>`
+      : vehicles.map(v=>`
+          <div onclick="pickVehicle('${v.vehicle_number}',this)"
+               style="display:flex;align-items:center;gap:8px;padding:8px 12px;
+                      background:rgba(255,255,255,0.04);border:1px solid var(--p-border);
+                      border-radius:10px;cursor:pointer;transition:all 0.2s;"
+               onmouseover="this.style.borderColor='var(--p-blue)'"
+               onmouseout="this.style.borderColor='var(--p-border)'">
             <span>${v.vehicle_type==='bike'?'🏍️':v.vehicle_type==='truck'?'🚛':'🚗'}</span>
             <div>
-              <div class="vehicle-num" style="font-size:13px;">${v.vehicle_number}</div>
-              <div class="vehicle-type-label">${v.vehicle_name||v.vehicle_type}</div>
+              <div style="font-size:13px;font-weight:700;color:var(--p-text);">${v.vehicle_number}</div>
+              <div style="font-size:11px;color:var(--p-text3);">${v.vehicle_name||v.vehicle_type}</div>
             </div>
           </div>`).join('');
   }
 
-  function pickVehicle(number, el) {
-    document.querySelectorAll('#modalVehicleList .vehicle-card').forEach(c => c.classList.remove('selected'));
-    el.classList.add('selected');
+  function pickVehicle(number) {
     document.getElementById('vehicleNumber').value = number;
   }
 
-  function closeModal() { document.getElementById('modal').style.display = 'none'; }
+  function closeModal() {
+    document.getElementById('modal').style.display = 'none';
+  }
 
   async function confirmBooking() {
-  const vehicle = document.getElementById('vehicleNumber').value.trim();
-  if (!vehicle) {
-    showAlert('modalError', 'Please enter or select a vehicle number');
-    return;
+    const vehicle = document.getElementById('vehicleNumber').value.trim();
+    if (!vehicle) { showAlert('modalError','Please enter or select a vehicle number'); return; }
+    const now  = new Date().toISOString().slice(0,19).replace('T',' ');
+    const data = await apiPost('/bookings',{
+      user_id:user.id, slot_id:selectedSlotId,
+      vehicle_number:vehicle, start_time:now
+    });
+    if (data.message) {
+      closeModal();
+      window.location.href = `payment.html?id=${data.bookingId}`;
+    } else { showAlert('modalError', data.error); }
   }
-  const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
-  const data = await apiPost('/bookings', {
-    user_id: user.id,
-    slot_id: selectedSlotId,
-    vehicle_number: vehicle,
-    start_time: now
-  });
-  if (data.message) {
-    closeModal();
-    // Redirect to payment page
-    window.location.href = `payment.html?id=${data.bookingId}`;
-  } else {
-    showAlert('modalError', data.error);
-  }
-}
 
+  function logout() { localStorage.clear(); window.location.href='../index.html'; }
   loadSlots();
 </script>
-<script src="../app.js"></script>
 </body>
 </html>

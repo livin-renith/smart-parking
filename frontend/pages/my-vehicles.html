@@ -1,109 +1,142 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="stylesheet" href="../animations.css">
   <meta charset="UTF-8">
-  <title>My Vehicles — Smart Parking</title>
-  <link rel="stylesheet" href="../style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Vehicles — SmartPark</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../animations.css">
+  <link rel="stylesheet" href="../premium.css">
 </head>
-<body>
-  <!-- Page loader — paste at top of every page body -->
+<body class="p-bg">
+
 <div id="page-loader">
   <div class="loader-icon">🅿️</div>
   <div class="loader-title">SmartPark</div>
-  <div class="loader-track">
-    <div class="loader-fill"></div>
-  </div>
+  <div class="loader-track"><div class="loader-fill"></div></div>
   <div class="loader-dots">
     <div class="loader-dot"></div>
     <div class="loader-dot"></div>
     <div class="loader-dot"></div>
   </div>
 </div>
-
-<!-- Floating particles background -->
 <div class="particles-container"></div>
-
-<!-- Scroll to top button -->
 <button id="scroll-top">↑</button>
 
-<nav class="navbar">
-  <h2>🅿️ Smart<span>Park</span></h2>
-  <div class="nav-links">
-    <a href="dashboard.html">Dashboard</a>
-    <a href="my-bookings.html">My Bookings</a>
-    <a href="my-vehicles.html" class="active">My Vehicles</a>
-    <a href="profile.html">Profile</a>
+<nav class="p-navbar">
+  <a href="dashboard.html" class="p-navbar-logo">
+    <div class="p-logo-icon">🅿️</div>
+    SmartPark
+  </a>
+  <div class="p-nav-links">
+    <a href="dashboard.html"   class="p-nav-link">Dashboard</a>
+    <a href="map.html"         class="p-nav-link">Find Parking</a>
+    <a href="my-bookings.html" class="p-nav-link">My Bookings</a>
+    <a href="my-vehicles.html" class="p-nav-link active">My Vehicles</a>
+    <a href="profile.html"     class="p-nav-link">Profile</a>
   </div>
   <div style="display:flex;align-items:center;">
-    <div class="nav-user">
-      <div class="nav-avatar" id="navAvatar">U</div>
-      <span class="nav-name" id="navName"></span>
+    <div class="p-nav-user">
+      <div class="p-nav-avatar" id="navAvatar">U</div>
+      <span class="p-nav-name" id="navName"></span>
     </div>
-    <button class="btn-logout" onclick="logout()">Logout</button>
+    <button class="p-btn-logout" onclick="logout()">Logout</button>
   </div>
 </nav>
 
-<div class="page" style="max-width:680px;">
+<div style="max-width:720px;margin:32px auto;padding:0 24px;">
 
-  <div class="card reveal-section">
-    <div class="card-title">Add Vehicle</div>
-    <div class="card-subtitle">Save your vehicles for faster booking</div>
+  <!-- Add vehicle -->
+  <div class="glass-card" style="margin-bottom:24px;">
+    <div class="p-section-tag">Manage</div>
+    <div class="p-section-title">Add New Vehicle</div>
+    <p class="p-section-sub">Save your vehicles for faster booking next time</p>
 
-    <div class="alert alert-error"   id="errorMsg"></div>
-    <div class="alert alert-success" id="successMsg"></div>
+    <div class="p-alert p-alert-error"   id="errorMsg"></div>
+    <div class="p-alert p-alert-success" id="successMsg"></div>
 
-    <div class="form-group">
-      <label>Vehicle Number</label>
-      <input class="form-control" type="text" id="vNumber" placeholder="e.g. TN01AB1234">
+    <div class="p-form-group">
+      <label class="p-form-label">Vehicle Number</label>
+      <input class="p-form-input" type="text" id="vNumber" placeholder="e.g. TN01AB1234">
     </div>
-    <div class="form-group">
-      <label>Vehicle Name <span style="color:#aaa;font-weight:400;">(optional)</span></label>
-      <input class="form-control" type="text" id="vName" placeholder="e.g. My Swift">
+    <div class="p-form-group">
+      <label class="p-form-label">Vehicle Name (optional)</label>
+      <input class="p-form-input" type="text" id="vName" placeholder="e.g. My Swift">
     </div>
-    <div class="form-group">
-      <label>Vehicle Type</label>
-      <select class="form-control" id="vType">
+    <div class="p-form-group">
+      <label class="p-form-label">Vehicle Type</label>
+      <select class="p-form-input" id="vType">
         <option value="car">🚗 Car</option>
         <option value="bike">🏍️ Bike</option>
         <option value="truck">🚛 Truck</option>
       </select>
     </div>
-    <button class="btn btn-primary" onclick="addVehicle()">+ Add Vehicle</button>
+    <button class="p-btn p-btn-primary" style="width:auto;padding:12px 28px;" onclick="addVehicle()">
+      + Add Vehicle
+    </button>
   </div>
 
-  <div class="card reveal-section">
-    <div class="card-title">Saved Vehicles</div>
-    <div class="card-subtitle">These vehicles appear when you book a slot</div>
-    <div class="vehicles-grid" id="vehicleList"></div>
+  <!-- Saved vehicles -->
+  <div class="glass-card">
+    <div class="p-section-tag">Saved</div>
+    <div class="p-section-title">My Vehicles</div>
+    <p class="p-section-sub">These vehicles appear when you book a slot</p>
+    <div class="p-vehicles-grid" id="vehicleList">
+      <div class="p-empty"><div class="icon">🚗</div><h3>Loading vehicles...</h3></div>
+    </div>
   </div>
 
 </div>
 
 <script src="../script.js"></script>
+<script src="../app.js"></script>
 <script>
   const user = JSON.parse(localStorage.getItem('user'));
   if (!user) window.location.href = '../index.html';
   document.getElementById('navName').textContent   = user.name;
   document.getElementById('navAvatar').textContent = user.name.charAt(0).toUpperCase();
 
+  function logout() { localStorage.clear(); window.location.href='../index.html'; }
+
+  function showAlert(id, msg, type='error') {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = msg;
+    el.className = `p-alert p-alert-${type}`;
+    el.style.display = 'flex';
+    setTimeout(() => el.style.display='none', 4000);
+  }
+
   async function loadVehicles() {
     const vehicles = await apiGet(`/vehicles/${user.id}`);
     const container = document.getElementById('vehicleList');
-    if (vehicles.length === 0) {
-      container.innerHTML = `<div class="empty-state"><div class="icon">🚗</div><h3>No vehicles yet</h3><p>Add your first vehicle above</p></div>`;
+    if (!vehicles.length) {
+      container.innerHTML = `<div class="p-empty">
+        <div class="icon">🚗</div>
+        <h3>No vehicles yet</h3>
+        <p>Add your first vehicle above</p>
+      </div>`;
       return;
     }
-    container.innerHTML = vehicles.map(v => `
-      <div class="vehicle-card">
-        <div class="vehicle-top">
-          <span class="vehicle-icon">${v.vehicle_type==='bike'?'🏍️':v.vehicle_type==='truck'?'🚛':'🚗'}</span>
-          <button class="remove-btn" onclick="removeVehicle(${v.id})" title="Remove">✕</button>
+    container.innerHTML = vehicles.map((v,i) => `
+      <div class="p-vehicle-card" style="animation-delay:${i*0.08}s;">
+        <div class="p-vehicle-top">
+          <span class="p-vehicle-icon">
+            ${v.vehicle_type==='bike'?'🏍️':v.vehicle_type==='truck'?'🚛':'🚗'}
+          </span>
+          <button onclick="removeVehicle(${v.id})"
+                  style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);
+                         color:#ef4444;padding:4px 10px;border-radius:8px;cursor:pointer;
+                         font-size:12px;font-family:'Inter',sans-serif;transition:all 0.2s;"
+                  onmouseover="this.style.background='rgba(239,68,68,0.2)'"
+                  onmouseout="this.style.background='rgba(239,68,68,0.1)'">
+            Remove
+          </button>
         </div>
-        <div class="vehicle-num">${v.vehicle_number}</div>
-        <div class="vehicle-type-label">${v.vehicle_name ? v.vehicle_name+' · ' : ''}${v.vehicle_type}</div>
-      </div>
-    `).join('');
+        <div class="p-vehicle-num">${v.vehicle_number}</div>
+        <div class="p-vehicle-type">${v.vehicle_name?v.vehicle_name+' · ':''}${v.vehicle_type}</div>
+      </div>`).join('');
   }
 
   async function addVehicle() {
@@ -111,7 +144,7 @@
     const vehicle_name   = document.getElementById('vName').value.trim();
     const vehicle_type   = document.getElementById('vType').value;
     if (!vehicle_number) { showAlert('errorMsg','Please enter a vehicle number'); return; }
-    const data = await apiPost('/vehicles', { user_id:user.id, vehicle_number, vehicle_name, vehicle_type });
+    const data = await apiPost('/vehicles',{ user_id:user.id, vehicle_number, vehicle_name, vehicle_type });
     if (data.message) {
       showAlert('successMsg', data.message, 'success');
       document.getElementById('vNumber').value = '';
@@ -129,6 +162,5 @@
 
   loadVehicles();
 </script>
-<script src="../app.js"></script>
 </body>
 </html>
