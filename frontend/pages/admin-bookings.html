@@ -1,84 +1,81 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="stylesheet" href="../animations.css">
   <meta charset="UTF-8">
-  <title>Manage Bookings — Admin</title>
-  <link rel="stylesheet" href="../style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Bookings — SmartPark Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../animations.css">
+  <link rel="stylesheet" href="../premium.css">
 </head>
-<body>
-  <!-- Page loader — paste at top of every page body -->
+<body class="p-bg">
+
 <div id="page-loader">
   <div class="loader-icon">🅿️</div>
-  <div class="loader-title">SmartPark</div>
-  <div class="loader-track">
-    <div class="loader-fill"></div>
-  </div>
+  <div class="loader-title">SmartPark Admin</div>
+  <div class="loader-track"><div class="loader-fill"></div></div>
   <div class="loader-dots">
     <div class="loader-dot"></div>
     <div class="loader-dot"></div>
     <div class="loader-dot"></div>
   </div>
 </div>
-
-<!-- Floating particles background -->
 <div class="particles-container"></div>
-
-<!-- Scroll to top button -->
 <button id="scroll-top">↑</button>
 
-<nav class="navbar">
-  <h2>🅿️ Smart<span>Park</span> <span style="font-size:11px;background:rgba(255,255,255,0.2);padding:2px 8px;border-radius:10px;margin-left:6px;">ADMIN</span></h2>
-  <div class="nav-links">
-  <a href="admin-dashboard.html" class="active">Dashboard</a>
-  <a href="admin-slots.html">Manage Slots</a>
-  <a href="admin-bookings.html">Bookings</a>
-  <a href="admin-users.html">Users</a>
-  <a href="admin-locations.html">📍 Locations</a>
-</div>
+<nav class="p-navbar">
+  <a href="admin-dashboard.html" class="p-navbar-logo">
+    <div class="p-logo-icon">🅿️</div>
+    SmartPark
+    <span style="font-size:10px;background:rgba(139,92,246,0.3);color:#c4b5fd;
+                 padding:2px 8px;border-radius:10px;border:1px solid rgba(139,92,246,0.3);">ADMIN</span>
+  </a>
+  <div class="p-nav-links">
+    <a href="admin-dashboard.html" class="p-nav-link">Dashboard</a>
+    <a href="admin-slots.html"     class="p-nav-link">Slots</a>
+    <a href="admin-bookings.html"  class="p-nav-link active">Bookings</a>
+    <a href="admin-users.html"     class="p-nav-link">Users</a>
+    <a href="admin-locations.html" class="p-nav-link">Locations</a>
+  </div>
   <div style="display:flex;align-items:center;">
-    <div class="nav-user">
-      <div class="nav-avatar">A</div>
-      <span class="nav-name" id="navName">Admin</span>
+    <div class="p-nav-user">
+      <div class="p-nav-avatar">A</div>
+      <span class="p-nav-name" id="navName">Admin</span>
     </div>
-    <button class="btn-logout" onclick="logout()">Logout</button>
+    <button class="p-btn-logout" onclick="logout()">Logout</button>
   </div>
 </nav>
 
-<div class="page">
-  <div class="card reveal-section">
-    <div class="card-title">All Bookings</div>
-    <div class="card-subtitle">Manage all parking bookings across all users</div>
+<div style="max-width:1080px;margin:32px auto;padding:0 24px;">
+  <div class="glass-card">
+    <div class="p-section-tag">Manage</div>
+    <div class="p-section-title">All Bookings</div>
+    <p class="p-section-sub">Manage all parking bookings across all users</p>
 
-    <!-- Filter tabs -->
-    <div class="filter-tabs">
-      <div class="tab active" onclick="setFilter('all',this)">All</div>
-      <div class="tab" onclick="setFilter('active',this)">Active</div>
-      <div class="tab" onclick="setFilter('completed',this)">Completed</div>
-      <div class="tab" onclick="setFilter('cancelled',this)">Cancelled</div>
+    <div class="p-filter-tabs">
+      <div class="p-tab active" onclick="setFilter('all',this)">All</div>
+      <div class="p-tab" onclick="setFilter('active',this)">Active</div>
+      <div class="p-tab" onclick="setFilter('completed',this)">Completed</div>
+      <div class="p-tab" onclick="setFilter('cancelled',this)">Cancelled</div>
     </div>
 
-    <!-- Search -->
-    <div class="search-wrap" style="margin-bottom:16px;">
-      <span class="search-icon">🔍</span>
-      <input type="text" id="searchInput" placeholder="Search by user name or slot..." oninput="renderBookings()">
+    <div class="p-search-wrap">
+      <span class="p-search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="Search by user or slot..."
+             oninput="renderBookings()">
     </div>
 
-    <div class="table-wrap">
-      <table>
+    <div class="p-table-wrap">
+      <table class="p-table">
         <thead>
           <tr>
-            <th>User</th>
-            <th>Slot</th>
-            <th>Floor</th>
-            <th>Vehicle</th>
-            <th>Booked At</th>
-            <th>Status</th>
-            <th>Action</th>
+            <th>User</th><th>Slot</th><th>Floor</th>
+            <th>Vehicle</th><th>Booked At</th><th>Status</th><th>Action</th>
           </tr>
         </thead>
         <tbody id="bookingsTable">
-          <tr><td colspan="7" style="text-align:center;color:#8892a4;">Loading...</td></tr>
+          <tr><td colspan="7" style="text-align:center;color:var(--p-text3);padding:24px;">Loading...</td></tr>
         </tbody>
       </table>
     </div>
@@ -86,56 +83,52 @@
 </div>
 
 <script src="../script.js"></script>
+<script src="../app.js"></script>
 <script>
-  let allBookings  = [];
-  let currentFilter = 'all';
+  let allBookings = [], currentFilter = 'all';
   const user = JSON.parse(localStorage.getItem('user'));
-  if (!user || user.role !== 'admin') window.location.href = '../index.html';
+  if (!user||user.role!=='admin') window.location.href='../index.html';
   document.getElementById('navName').textContent = user.name;
+  function logout() { localStorage.clear(); window.location.href='../index.html'; }
 
   function setFilter(f, el) {
     currentFilter = f;
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.p-tab').forEach(t=>t.classList.remove('active'));
     el.classList.add('active');
     renderBookings();
   }
 
   function renderBookings() {
     const search = document.getElementById('searchInput').value.toLowerCase();
-    let list = currentFilter === 'all' ? allBookings : allBookings.filter(b => b.status === currentFilter);
-    list = list.filter(b =>
-      b.user_name.toLowerCase().includes(search) ||
+    let list = currentFilter==='all' ? allBookings : allBookings.filter(b=>b.status===currentFilter);
+    list = list.filter(b=>
+      b.user_name.toLowerCase().includes(search)||
       b.slot_number.toLowerCase().includes(search)
     );
     const tbody = document.getElementById('bookingsTable');
-    if (list.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#8892a4;">No bookings found</td></tr>';
+    if (!list.length) {
+      tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;color:var(--p-text3);padding:24px;">No bookings found</td></tr>`;
       return;
     }
-    tbody.innerHTML = list.map(b => `
+    tbody.innerHTML = list.map(b=>`
       <tr>
-        <td>
-          <strong>${b.user_name}</strong>
-          <br><span style="font-size:12px;color:#8892a4;">${b.email}</span>
-        </td>
-        <td>${b.slot_number}</td>
+        <td><strong style="color:var(--p-text);">${b.user_name}</strong><br>
+            <span style="font-size:12px;color:var(--p-text3);">${b.email}</span></td>
+        <td style="color:var(--p-text);">${b.slot_number}</td>
         <td>${b.floor}</td>
         <td>${b.vehicle_number}</td>
         <td>${new Date(b.created_at).toLocaleString()}</td>
-        <td><span class="badge badge-${b.status}">${b.status}</span></td>
-        <td>
-          ${b.status === 'active'
-            ? `<button class="btn btn-danger btn-sm" onclick="cancelBooking(${b.id})">Cancel</button>`
-            : '-'}
-        </td>
-      </tr>
-    `).join('');
+        <td><span class="p-badge p-badge-${b.status}">${b.status}</span></td>
+        <td>${b.status==='active'
+          ? `<button class="p-btn p-btn-danger p-btn-sm" onclick="cancelBooking(${b.id})">Cancel</button>`
+          : '—'}</td>
+      </tr>`).join('');
   }
 
   async function cancelBooking(id) {
     if (!confirm('Cancel this booking?')) return;
-    const data = await apiPut(`/admin/bookings/cancel/${id}`, {});
-    alert(data.message || data.error);
+    const data = await apiPut(`/admin/bookings/cancel/${id}`,{});
+    alert(data.message||data.error);
     allBookings = await apiGet('/admin/bookings');
     renderBookings();
   }
@@ -146,6 +139,5 @@
   }
   load();
 </script>
-<script src="../app.js"></script>
 </body>
 </html>

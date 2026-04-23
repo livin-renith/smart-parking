@@ -1,105 +1,128 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="stylesheet" href="../animations.css">
   <meta charset="UTF-8">
-  <title>My Bookings — Smart Parking</title>
-  <link rel="stylesheet" href="../style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Bookings — SmartPark</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../animations.css">
+  <link rel="stylesheet" href="../premium.css">
 </head>
-<body>
-  <!-- Page loader — paste at top of every page body -->
+<body class="p-bg">
+
 <div id="page-loader">
   <div class="loader-icon">🅿️</div>
   <div class="loader-title">SmartPark</div>
-  <div class="loader-track">
-    <div class="loader-fill"></div>
-  </div>
+  <div class="loader-track"><div class="loader-fill"></div></div>
   <div class="loader-dots">
     <div class="loader-dot"></div>
     <div class="loader-dot"></div>
     <div class="loader-dot"></div>
   </div>
 </div>
-
-<!-- Floating particles background -->
 <div class="particles-container"></div>
-
-<!-- Scroll to top button -->
 <button id="scroll-top">↑</button>
 
-<nav class="navbar">
-  <h2>🅿️ Smart<span>Park</span></h2>
-  <div class="nav-links">
-    <a href="dashboard.html">Dashboard</a>
-    <a href="my-bookings.html" class="active">My Bookings</a>
-    <a href="my-vehicles.html">My Vehicles</a>
-    <a href="profile.html">Profile</a>
+<nav class="p-navbar">
+  <a href="dashboard.html" class="p-navbar-logo">
+    <div class="p-logo-icon">🅿️</div>
+    SmartPark
+  </a>
+  <div class="p-nav-links">
+    <a href="dashboard.html"   class="p-nav-link">Dashboard</a>
+    <a href="map.html"         class="p-nav-link">Find Parking</a>
+    <a href="my-bookings.html" class="p-nav-link active">My Bookings</a>
+    <a href="my-vehicles.html" class="p-nav-link">My Vehicles</a>
+    <a href="profile.html"     class="p-nav-link">Profile</a>
   </div>
   <div style="display:flex;align-items:center;">
-    <div class="nav-user">
-      <div class="nav-avatar" id="navAvatar">U</div>
-      <span class="nav-name" id="navName"></span>
+    <div class="p-nav-user">
+      <div class="p-nav-avatar" id="navAvatar">U</div>
+      <span class="p-nav-name" id="navName"></span>
     </div>
-    <button class="btn-logout" onclick="logout()">Logout</button>
+    <button class="p-btn-logout" onclick="logout()">Logout</button>
   </div>
 </nav>
 
-<div class="page" style="max-width:720px;">
-  <div class="card reveal-section">
-    <div class="card-title">My Bookings</div>
-    <div class="card-subtitle">View and manage all your parking bookings</div>
+<div style="max-width:800px;margin:32px auto;padding:0 24px;">
 
-    <div class="filter-tabs">
-      <div class="tab active" onclick="setFilter('all',this)">All</div>
-      <div class="tab" onclick="setFilter('active',this)">Active</div>
-      <div class="tab" onclick="setFilter('completed',this)">Completed</div>
-      <div class="tab" onclick="setFilter('cancelled',this)">Cancelled</div>
+  <div class="glass-card">
+    <div class="p-section-tag">History</div>
+    <div class="p-section-title">My Bookings</div>
+    <p class="p-section-sub">View and manage all your parking bookings</p>
+
+    <div class="p-filter-tabs">
+      <div class="p-tab active" onclick="setFilter('all',this)">All</div>
+      <div class="p-tab" onclick="setFilter('active',this)">Active</div>
+      <div class="p-tab" onclick="setFilter('completed',this)">Completed</div>
+      <div class="p-tab" onclick="setFilter('cancelled',this)">Cancelled</div>
     </div>
 
-    <div id="bookingsList"></div>
+    <div id="bookingsList">
+      <div class="p-empty">
+        <div class="icon">📋</div>
+        <h3>Loading bookings...</h3>
+      </div>
+    </div>
   </div>
+
 </div>
 
 <script src="../script.js"></script>
+<script src="../app.js"></script>
 <script>
-  let allBookings = [];
-  let currentFilter = 'all';
+  let allBookings = [], currentFilter = 'all';
   const user = JSON.parse(localStorage.getItem('user'));
   if (!user) window.location.href = '../index.html';
   document.getElementById('navName').textContent   = user.name;
   document.getElementById('navAvatar').textContent = user.name.charAt(0).toUpperCase();
 
+  function logout() { localStorage.clear(); window.location.href='../index.html'; }
+
   function setFilter(f, el) {
     currentFilter = f;
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.p-tab').forEach(t=>t.classList.remove('active'));
     el.classList.add('active');
     renderBookings();
   }
 
   function renderBookings() {
-    const list = currentFilter === 'all' ? allBookings : allBookings.filter(b => b.status === currentFilter);
+    const list = currentFilter==='all'
+      ? allBookings
+      : allBookings.filter(b=>b.status===currentFilter);
     const container = document.getElementById('bookingsList');
-    if (list.length === 0) {
-      container.innerHTML = `<div class="empty-state"><div class="icon">📋</div><h3>No bookings found</h3><p>You have no ${currentFilter === 'all' ? '' : currentFilter} bookings yet.</p></div>`;
+    if (!list.length) {
+      container.innerHTML = `<div class="p-empty">
+        <div class="icon">📋</div>
+        <h3>No bookings found</h3>
+        <p>You have no ${currentFilter==='all'?'':currentFilter} bookings yet</p>
+      </div>`;
       return;
     }
-    container.innerHTML = list.map(b => `
-      <div class="booking-card ${b.status}">
-        <div class="booking-top">
+    container.innerHTML = list.map((b,i) => `
+      <div class="p-booking-card ${b.status}" style="animation-delay:${i*0.07}s;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
           <div>
-            <div class="booking-slot">Slot ${b.slot_number}</div>
-            <div style="margin-top:4px;"><span class="badge badge-${b.status}">${b.status}</span></div>
+            <div class="p-booking-slot">Slot ${b.slot_number}</div>
+            <div style="margin-top:4px;">
+              <span class="p-badge p-badge-${b.status}">${b.status}</span>
+            </div>
           </div>
-          ${b.status === 'active' ? `<button class="btn btn-danger btn-sm" onclick="cancelBooking(${b.id})">Cancel</button>` : ''}
+          ${b.status==='active'
+            ? `<button class="p-btn p-btn-danger p-btn-sm" onclick="cancelBooking(${b.id})">Cancel</button>`
+            : ''}
         </div>
-        <div class="booking-meta">
-          <div class="booking-meta-item">🏢 <strong>${b.floor}</strong></div>
-          <div class="booking-meta-item">🚗 <strong>${b.vehicle_number}</strong></div>
-          <div class="booking-meta-item">🕐 <strong>${new Date(b.start_time).toLocaleString()}</strong></div>
-          <div class="booking-meta-item">⏱️ <strong>${b.end_time ? Math.round((new Date(b.end_time)-new Date(b.start_time))/60000)+' mins' : 'Ongoing'}</strong></div>
+        <div class="p-booking-meta">
+          <div class="p-booking-meta-item">🏢 <strong style="color:var(--p-text2);">${b.floor}</strong></div>
+          <div class="p-booking-meta-item">🚗 <strong style="color:var(--p-text2);">${b.vehicle_number}</strong></div>
+          <div class="p-booking-meta-item">🕐 <strong style="color:var(--p-text2);">${new Date(b.start_time).toLocaleString()}</strong></div>
+          <div class="p-booking-meta-item">⏱️ <strong style="color:var(--p-text2);">${b.end_time
+            ? Math.round((new Date(b.end_time)-new Date(b.start_time))/60000)+' mins'
+            : 'Ongoing'}</strong></div>
+          ${b.total_fee ? `<div class="p-booking-meta-item">💰 <strong style="color:#10b981;">₹${b.total_fee}</strong></div>` : ''}
         </div>
-      </div>
-    `).join('');
+      </div>`).join('');
   }
 
   async function cancelBooking(id) {
@@ -116,6 +139,5 @@
   }
   load();
 </script>
-<script src="../app.js"></script>
 </body>
 </html>
