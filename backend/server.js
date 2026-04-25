@@ -21,7 +21,11 @@ app.use('/api/vehicles',  require('./routes/vehicles'));
 app.use('/api/locations', require('./routes/locations'));
 
 app.get('/', (req, res) => {
-  res.json({ message: '🅿️ Smart Parking API is running!' });
+  res.json({
+    message : '🅿️ Smart Parking API is running!',
+    status  : 'online',
+    version : '1.0.0'
+  });
 });
 
 const PORT = process.env.PORT || 5000;
