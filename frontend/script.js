@@ -1,7 +1,7 @@
 const API = window.location.hostname === 'localhost' ||
             window.location.hostname === '127.0.0.1'
   ? 'http://localhost:5000/api'
-  : 'https://smart-parking-backend.onrender.com/api';
+  : 'https://smart-parking-2-1e7r.onrender.com/api';
 function getToken() {
   return localStorage.getItem('token');
 }
