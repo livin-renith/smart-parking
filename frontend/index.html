@@ -67,9 +67,9 @@
         <input class="p-form-input" type="password" id="password" placeholder="Enter your password">
       </div>
 
-      <button class="p-btn p-btn-primary" onclick="login()">
-        Login to SmartPark →
-      </button>
+      <button class="p-btn p-btn-primary" id="loginBtn" onclick="login()">
+  Login to SmartPark →
+</button>
 
       <p style="text-align:center;margin-top:20px;font-size:14px;color:var(--p-text3);">
         No account? <a href="pages/register.html">Register here</a>
@@ -83,43 +83,106 @@
 const API = window.location.hostname === 'localhost' ||
             window.location.hostname === '127.0.0.1'
   ? 'http://localhost:5000/api'
-  : 'https://smart-parking-2-1e7r.onrender.com/api';
+  : 'https://smart-parking-backend.onrender.com/api';
 
 function showAlert(id, msg, type='error') {
   const el = document.getElementById(id);
   if (!el) return;
-  el.textContent = msg;
-  el.className = `p-alert p-alert-${type}`;
+  el.textContent   = msg;
+  el.className     = `p-alert p-alert-${type}`;
   el.style.display = 'flex';
-  setTimeout(() => el.style.display = 'none', 4000);
+  setTimeout(() => el.style.display = 'none', 5000);
 }
 
 async function apiPost(url, body) {
   const res = await fetch(API + url, {
-    method: 'POST',
+    method : 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
+    body   : JSON.stringify(body)
   });
   return res.json();
+}
+
+// ── Wake up backend before login ──
+async function wakeUpServer() {
+  try {
+    await fetch('https://smart-parking-backend.onrender.com/health');
+  } catch(e) {
+    // ignore — just waking up
+  }
 }
 
 async function login() {
   const email    = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value.trim();
-  if (!email || !password) { showAlert('errorMsg','Please fill in all fields'); return; }
-  const data = await apiPost('/auth/login', { email, password });
-  if (data.token) {
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('user', JSON.stringify(data.user));
-    if (data.user.role === 'admin') {
-      window.location.href = 'pages/admin-dashboard.html';
-    } else {
-      window.location.href = 'pages/dashboard.html';
+
+  if (!email || !password) {
+    showAlert('errorMsg', 'Please fill in all fields');
+    return;
+  }
+
+  const btn = document.getElementById('loginBtn');
+  btn.innerHTML = '<span class="loading-spinner"></span> Connecting to server...';
+  btn.disabled  = true;
+
+  // Try login with retry logic
+  let attempts = 0;
+  const maxAttempts = 3;
+
+  while (attempts < maxAttempts) {
+    try {
+      attempts++;
+      console.log(`Login attempt ${attempts}...`);
+
+      const controller = new AbortController();
+      const timeout    = setTimeout(() => controller.abort(), 30000);
+
+      const res  = await fetch(API + '/auth/login', {
+        method : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body   : JSON.stringify({ email, password }),
+        signal : controller.signal
+      });
+      clearTimeout(timeout);
+
+      const data = await res.json();
+
+      if (data.token) {
+        btn.innerHTML = '✅ Success! Redirecting...';
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        setTimeout(() => {
+          window.location.href = data.user.role === 'admin'
+            ? 'pages/admin-dashboard.html'
+            : 'pages/dashboard.html';
+        }, 500);
+        return;
+      } else {
+        showAlert('errorMsg', data.error || 'Invalid email or password');
+        btn.innerHTML = 'Login to SmartPark →';
+        btn.disabled  = false;
+        return;
+      }
+
+    } catch (err) {
+      console.log(`Attempt ${attempts} failed:`, err.message);
+
+      if (attempts < maxAttempts) {
+        btn.innerHTML = `<span class="loading-spinner"></span> Server waking up... (attempt ${attempts}/${maxAttempts})`;
+        await new Promise(r => setTimeout(r, 8000));
+      } else {
+        showAlert('errorMsg', 'Server is taking too long. Please wait 1 minute and try again.');
+        btn.innerHTML = 'Login to SmartPark →';
+        btn.disabled  = false;
+      }
     }
-  } else {
-    showAlert('errorMsg', data.error || 'Login failed');
   }
 }
+
+// Pre-warm the server when page loads
+window.addEventListener('DOMContentLoaded', () => {
+  wakeUpServer();
+});
 
 document.addEventListener('keydown', e => {
   if (e.key === 'Enter') login();
@@ -143,11 +206,16 @@ window.addEventListener('DOMContentLoaded', () => {
   for (let i = 0; i < 15; i++) {
     const p = document.createElement('div');
     p.className = 'particle';
-    p.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;
-      width:${4+Math.random()*5}px;height:${4+Math.random()*5}px;
+    p.style.cssText = `
+      left:${Math.random()*100}%;
+      top:${Math.random()*100}%;
+      width:${4+Math.random()*5}px;
+      height:${4+Math.random()*5}px;
       background:${colors[Math.floor(Math.random()*colors.length)]};
-      animation-delay:${Math.random()*5}s;animation-duration:${4+Math.random()*5}s;
-      opacity:${0.08+Math.random()*0.15};`;
+      animation-delay:${Math.random()*5}s;
+      animation-duration:${4+Math.random()*5}s;
+      opacity:${0.08+Math.random()*0.15};
+    `;
     container.appendChild(p);
   }
 });

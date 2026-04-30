@@ -1055,3 +1055,279 @@ select.p-form-input { cursor:pointer; }
 @media (max-width:480px) {
   .p-stats-grid { grid-template-columns:1fr; }
 }
+/* ════════════════════════════════════════
+   MOBILE RESPONSIVE FIXES
+════════════════════════════════════════ */
+
+/* ── Small phones (up to 480px) ── */
+@media (max-width: 480px) {
+
+  /* Navbar */
+  .p-navbar {
+    padding         : 0 12px;
+    height          : 56px;
+    flex-wrap       : nowrap;
+  }
+  .p-navbar-logo { font-size:15px; gap:6px; }
+  .p-logo-icon   { width:28px; height:28px; font-size:14px; }
+  .p-nav-links   { display:none; }
+  .p-nav-user    { display:none; }
+  .p-btn-logout  { font-size:11px; padding:5px 10px; margin-left:4px; }
+
+  /* Mobile hamburger menu */
+  .p-mobile-menu-btn {
+    display         : flex;
+    flex-direction  : column;
+    gap             : 5px;
+    cursor          : pointer;
+    padding         : 4px;
+    margin-left     : auto;
+  }
+  .p-mobile-menu-btn span {
+    display         : block;
+    width           : 22px;
+    height          : 2px;
+    background      : rgba(255,255,255,0.8);
+    border-radius   : 2px;
+    transition      : all 0.3s;
+  }
+
+  /* Auth pages */
+  .p-auth-page { grid-template-columns:1fr; min-height:100vh; }
+  .p-auth-left { display:none; }
+  .p-auth-right { padding:20px 16px; align-items:flex-start; padding-top:40px; }
+  .p-auth-box  {
+    padding      : 24px 20px;
+    border-radius: 16px;
+  }
+  .p-auth-box h2  { font-size:22px; }
+  .p-auth-box .p-sub { font-size:13px; }
+
+  /* Page container */
+  .page,
+  [style*="max-width:1080px"],
+  [style*="max-width: 1080px"],
+  [style*="max-width:800px"],
+  [style*="max-width: 800px"],
+  [style*="max-width:720px"],
+  [style*="max-width: 720px"],
+  [style*="max-width:520px"],
+  [style*="max-width: 520px"] {
+    padding : 0 12px !important;
+    margin  : 16px auto !important;
+  }
+
+  /* Glass cards */
+  .glass-card {
+    padding       : 18px 16px;
+    border-radius : 14px;
+    margin-bottom : 16px;
+  }
+
+  /* Section titles */
+  .p-section-title { font-size:20px; }
+  .p-section-sub   { font-size:13px; }
+
+  /* Stats grid — 2 columns on mobile */
+  .p-stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .p-stat-card  { padding:14px 12px; gap:10px; }
+  .p-stat-icon  { width:40px; height:40px; font-size:18px; }
+  .p-stat-num   { font-size:22px; }
+  .p-stat-label { font-size:10px; }
+
+  /* Parking slots grid */
+  .p-slots-grid {
+    grid-template-columns: repeat(auto-fill, minmax(80px,1fr));
+    gap: 8px;
+  }
+  .p-slot        { padding:12px 6px; border-radius:10px; }
+  .p-slot-num    { font-size:13px; }
+  .p-slot-floor  { font-size:9px; }
+
+  /* Filter tabs */
+  .p-filter-tabs { gap:6px; }
+  .p-tab         { padding:6px 12px; font-size:12px; }
+
+  /* Slot counts */
+  .p-slot-counts { gap:6px; }
+  .p-slot-count  { font-size:11px; padding:4px 10px; }
+
+  /* Search bar */
+  .p-search-wrap input { font-size:13px; padding:10px 14px 10px 38px; }
+  .p-search-icon       { font-size:14px; left:12px; }
+
+  /* Booking cards */
+  .p-booking-card { padding:14px 14px; }
+  .p-booking-slot { font-size:15px; }
+  .p-booking-meta { gap:6px; }
+  .p-booking-meta-item { font-size:11px; padding:3px 8px; }
+
+  /* Vehicle cards */
+  .p-vehicles-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .p-vehicle-card  { padding:14px; }
+  .p-vehicle-icon  { font-size:24px; }
+  .p-vehicle-num   { font-size:13px; }
+  .p-vehicle-type  { font-size:11px; }
+
+  /* Profile */
+  .p-profile-banner  { height:80px; }
+  .p-profile-avatar  { width:60px; height:60px; font-size:22px; }
+  .p-profile-name    { font-size:17px; }
+  .p-profile-email   { font-size:12px; }
+
+  /* Forms */
+  .p-form-input  { padding:11px 14px; font-size:13px; }
+  .p-form-label  { font-size:11px; }
+  .p-form-group  { margin-bottom:14px; }
+
+  /* Buttons */
+  .p-btn         { padding:10px 18px; font-size:13px; }
+  .p-btn-sm      { padding:6px 12px; font-size:11px; }
+
+  /* Badges */
+  .p-badge { padding:3px 8px; font-size:10px; }
+
+  /* Tables — make scrollable */
+  .p-table-wrap  { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .p-table       { min-width:500px; }
+  .p-table thead th { padding:10px 12px; font-size:10px; }
+  .p-table tbody td { padding:12px 12px; font-size:12px; }
+
+  /* Marquee */
+  .p-marquee-item { font-size:12px; gap:8px; }
+
+  /* Modal */
+  .modal-overlay > div,
+  .modal-box {
+    padding       : 20px 16px !important;
+    border-radius : 16px !important;
+    width         : 95% !important;
+    max-height    : 90vh;
+    overflow-y    : auto;
+  }
+
+  /* Admin charts grid */
+  [style*="grid-template-columns:1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Scroll to top button */
+  #scroll-top { width:38px; height:38px; font-size:16px; bottom:16px; right:16px; }
+
+  /* Marquee wrap */
+  .p-marquee-wrap { padding:10px 0; }
+
+  /* Admin badge */
+  .p-navbar-logo span { display:none; }
+}
+
+/* ── Tablets (481px to 768px) ── */
+@media (min-width: 481px) and (max-width: 768px) {
+
+  /* Navbar */
+  .p-navbar { padding:0 20px; height:60px; }
+  .p-nav-links { display:none; }
+  .p-nav-user  { padding:4px 10px 4px 4px; }
+  .p-nav-name  { display:none; }
+
+  /* Auth */
+  .p-auth-page  { grid-template-columns:1fr; }
+  .p-auth-left  { display:none; }
+  .p-auth-right { padding:32px 24px; }
+  .p-auth-box   { padding:32px 28px; }
+
+  /* Page container */
+  .page,
+  [style*="max-width:1080px"],
+  [style*="max-width: 1080px"] {
+    padding: 0 16px !important;
+    margin : 20px auto !important;
+  }
+
+  /* Stats */
+  .p-stats-grid { grid-template-columns:repeat(2,1fr); gap:12px; }
+  .p-stat-card  { padding:16px 14px; }
+
+  /* Slots */
+  .p-slots-grid { grid-template-columns:repeat(auto-fill,minmax(90px,1fr)); gap:10px; }
+
+  /* Charts */
+  [style*="grid-template-columns:1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Vehicles */
+  .p-vehicles-grid { grid-template-columns:repeat(2,1fr); }
+
+  /* Tables */
+  .p-table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .p-table      { min-width:500px; }
+}
+
+/* ── Medium screens (769px to 1024px) ── */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .p-navbar    { padding:0 24px; }
+  .p-nav-links { gap:2px; }
+  .p-nav-link  { padding:6px 10px; font-size:12px; }
+
+  .p-stats-grid { grid-template-columns:repeat(3,1fr); }
+
+  [style*="max-width:1080px"],
+  [style*="max-width: 1080px"] {
+    padding: 0 20px !important;
+  }
+}
+
+/* ── Fix mobile nav overflow ── */
+@media (max-width: 768px) {
+  body { overflow-x:hidden; }
+
+  /* Make sure nothing overflows horizontally */
+  .p-marquee-wrap { overflow:hidden; }
+
+  /* Stack booking card top section on mobile */
+  .p-booking-card > div:first-child {
+    flex-direction : column;
+    gap            : 8px;
+  }
+
+  /* Receipt page mobile */
+  .receipt-actions {
+    grid-template-columns: 1fr;
+    gap                  : 8px;
+  }
+  .receipt-total .amount { font-size:24px; }
+
+  /* Payment page methods */
+  [style*="grid-template-columns:1fr 1fr 1fr"] {
+    grid-template-columns: 1fr 1fr 1fr !important;
+    gap                  : 8px !important;
+  }
+
+  /* Admin form grids */
+  [style*="grid-template-columns:1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+    gap                  : 12px !important;
+  }
+}
+/* ── Loading Spinner ── */
+.loading-spinner {
+  display          : inline-block;
+  width            : 16px;
+  height           : 16px;
+  border           : 2.5px solid rgba(255,255,255,0.3);
+  border-top-color : #fff;
+  border-radius    : 50%;
+  animation        : spinnerAnim 0.7s linear infinite;
+  vertical-align   : middle;
+  margin-right     : 8px;
+}
+@keyframes spinnerAnim {
+  to { transform: rotate(360deg); }
+}
