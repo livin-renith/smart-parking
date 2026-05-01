@@ -35,7 +35,7 @@ app.get('/health', (req, res) => {
 });
 
 // ── Keep Render awake every 10 minutes ──
-const BACKEND_URL = 'https://smart-parking-backend.onrender.com/health';
+const BACKEND_URL = 'https://smart-parking-backend-4lx3.onrender.com';
 
 function keepAlive() {
   https.get(BACKEND_URL, (res) => {
