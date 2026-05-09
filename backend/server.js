@@ -4,7 +4,6 @@ require('dotenv').config();
 
 const app = express();
 
-// ── CORS ──
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
@@ -30,11 +29,10 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', time: new Date().toISOString() });
 });
 
-// ── Keep Render awake ──
-const BACKEND_URL = 'https://smart-parking-backend-4lx3.onrender.com/health';
+const BACKEND_URL = 'https://smart-parking-backend.onrender.com/health';
 function keepAlive() {
-  https.get(BACKEND_URL, (res) => {
-    console.log(`🔄 Keep-alive OK — ${new Date().toLocaleTimeString()}`);
+  https.get(BACKEND_URL, () => {
+    console.log('🔄 Keep-alive ping sent —', new Date().toLocaleTimeString());
   }).on('error', () => {});
 }
 setTimeout(() => {

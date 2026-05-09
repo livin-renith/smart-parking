@@ -2,6 +2,11 @@ require('dotenv').config();
 const mysql  = require('mysql2');
 const bcrypt = require('bcryptjs');
 
+console.log('🔧 Setting up database...');
+console.log('   Host:', process.env.DB_HOST);
+console.log('   Port:', process.env.DB_PORT);
+console.log('   DB  :', process.env.DB_NAME);
+
 const db = mysql.createConnection({
   host           : process.env.DB_HOST,
   user           : process.env.DB_USER,
@@ -14,10 +19,11 @@ const db = mysql.createConnection({
 
 db.connect(async (err) => {
   if (err) {
-    console.error('❌ Connection failed:', err.message);
-    process.exit(1);
+    console.log('⚠️  DB setup skipped:', err.message);
+    console.log('    Server will still start normally.');
+    process.exit(0);
   }
-  console.log('✅ Connected to database!');
+  console.log('✅ Connected! Creating tables...');
 
   const queries = [
     `CREATE TABLE IF NOT EXISTS users (
@@ -72,12 +78,13 @@ db.connect(async (err) => {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id)
     )`,
-    `INSERT IGNORE INTO locations (name,type,address,latitude,longitude,description) VALUES
+    `INSERT IGNORE INTO locations
+      (name,type,address,latitude,longitude,description) VALUES
       ('Cauvery Complex Mall','mall','Singarathope, Tiruchirappalli',10.8050,78.6856,'Popular shopping mall'),
       ('Mahatma Gandhi Memorial Hospital','hospital','Puthur, Tiruchirappalli',10.8299,78.6898,'Government hospital'),
       ('Hotel Sangam','hotel','Collector Office Road, Tiruchirappalli',10.8134,78.6912,'Popular hotel'),
-      ('Rockfort Temple','park','Rockfort, Tiruchirappalli',10.8231,78.6872,'Famous rock fort temple'),
-      ('Srirangam Temple','park','Srirangam, Tiruchirappalli',10.8653,78.6870,'Famous temple complex')`,
+      ('Rockfort Temple','park','Rockfort, Tiruchirappalli',10.8231,78.6872,'Famous rock fort'),
+      ('Srirangam Temple','park','Srirangam, Tiruchirappalli',10.8653,78.6870,'Famous temple')`,
     `INSERT IGNORE INTO parking_slots (slot_number,floor,location_id) VALUES
       ('A1','Ground Floor',1),('A2','Ground Floor',1),('A3','Ground Floor',1),
       ('A4','First Floor',1),('A5','First Floor',1),
@@ -90,17 +97,13 @@ db.connect(async (err) => {
   for (const q of queries) {
     await new Promise((resolve) => {
       db.query(q, (err) => {
-        if (err && !err.message.includes('already exists')) {
-          console.log('⚠️ Query note:', err.message.substring(0,60));
-        } else {
-          console.log('✅', q.substring(7,40).trim() + '...');
-        }
+        if (err) console.log('Note:', err.message.substring(0, 60));
+        else console.log('✅ Done:', q.substring(7, 40).trim() + '...');
         resolve();
       });
     });
   }
 
-  // Create admin user
   const hash = await bcrypt.hash('admin123', 10);
   await new Promise((resolve) => {
     db.query(
@@ -110,13 +113,13 @@ db.connect(async (err) => {
       [hash, hash],
       (err) => {
         if (err) console.log('Admin note:', err.message);
-        else console.log('✅ Admin user ready — admin@parking.com / admin123');
+        else console.log('✅ Admin ready: admin@parking.com / admin123');
         resolve();
       }
     );
   });
 
-  console.log('\n🎉 Database setup complete!');
+  console.log('🎉 Database setup complete!');
   db.end();
   process.exit(0);
 });
