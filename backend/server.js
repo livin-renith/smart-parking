@@ -1,9 +1,10 @@
-const express = require('express');
-const https   = require('https');
+const express  = require('express');
+const https    = require('https');
 require('dotenv').config();
 
 const app = express();
 
+// ── CORS ──
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
@@ -14,6 +15,7 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 
+// ── Routes ──
 app.use('/api/auth',      require('./routes/auth'));
 app.use('/api/slots',     require('./routes/slots'));
 app.use('/api/bookings',  require('./routes/bookings'));
@@ -29,10 +31,11 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', time: new Date().toISOString() });
 });
 
+// ── Keep Render awake ──
 const BACKEND_URL = 'https://smart-parking-backend.onrender.com/health';
 function keepAlive() {
   https.get(BACKEND_URL, () => {
-    console.log('🔄 Keep-alive ping sent —', new Date().toLocaleTimeString());
+    console.log('🔄 Keep-alive —', new Date().toLocaleTimeString());
   }).on('error', () => {});
 }
 setTimeout(() => {
@@ -40,7 +43,16 @@ setTimeout(() => {
   setInterval(keepAlive, 10 * 60 * 1000);
 }, 60000);
 
+// ── Start server then run DB setup ──
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`🚀 Server running on port ${PORT}`);
+
+  // Run database setup after server starts
+  try {
+    const setupDatabase = require('./setup-db');
+    await setupDatabase();
+  } catch (err) {
+    console.log('⚠️  DB setup error:', err.message);
+  }
 });
