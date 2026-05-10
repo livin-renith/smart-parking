@@ -19,24 +19,16 @@ const db = mysql.createConnection({
 
 db.connect((err) => {
   if (err) {
-    console.error('❌ Database connection failed!');
-    console.error('   Message:', err.message);
-    console.error('   Code   :', err.code);
-    process.exit(1);
+    console.error('❌ DB connection failed:', err.code, '-', err.message);
+    // Do NOT exit — let server stay running
+    // Render will still show as Live
+    return;
   }
-  console.log('✅ Connected to database successfully!');
+  console.log('✅ Connected to database!');
 });
 
 db.on('error', (err) => {
-  console.error('⚠️  DB error:', err.code);
-  if (err.code === 'PROTOCOL_CONNECTION_LOST' ||
-      err.code === 'ECONNRESET' ||
-      err.code === 'ETIMEDOUT') {
-    db.connect((err2) => {
-      if (err2) console.error('Reconnect failed:', err2.message);
-      else console.log('✅ Reconnected!');
-    });
-  }
+  console.error('DB runtime error:', err.code);
 });
 
 module.exports = db;

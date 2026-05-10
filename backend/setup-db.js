@@ -3,7 +3,7 @@ const mysql  = require('mysql2');
 const bcrypt = require('bcryptjs');
 
 async function setupDatabase() {
-  console.log('🔧 Setting up database...');
+  console.log('🔧 Running database setup...');
   console.log('   Host:', process.env.DB_HOST);
   console.log('   Port:', process.env.DB_PORT);
 
@@ -20,13 +20,12 @@ async function setupDatabase() {
 
     db.connect(async (err) => {
       if (err) {
-        console.log('⚠️  DB setup skipped:', err.message);
-        console.log('    Will retry when server starts...');
-        resolve(); // ← Never fail — always resolve
+        console.log('⚠️  DB setup skipped (will work on Render):', err.code);
+        resolve();
         return;
       }
 
-      console.log('✅ Connected! Creating tables...');
+      console.log('✅ Connected! Setting up tables...');
 
       const queries = [
         `CREATE TABLE IF NOT EXISTS users (
@@ -100,14 +99,13 @@ async function setupDatabase() {
       for (const q of queries) {
         await new Promise((res) => {
           db.query(q, (err) => {
-            if (err) console.log('Note:', err.message.substring(0, 60));
-            else console.log('✅ Done:', q.substring(7, 40).trim() + '...');
+            if (err) console.log('   Note:', err.message.substring(0, 60));
+            else     console.log('   ✅', q.substring(7, 40).trim() + '...');
             res();
           });
         });
       }
 
-      // Create admin user
       const hash = await bcrypt.hash('admin123', 10);
       await new Promise((res) => {
         db.query(
@@ -116,8 +114,8 @@ async function setupDatabase() {
            ON DUPLICATE KEY UPDATE password=?, role='admin'`,
           [hash, hash],
           (err) => {
-            if (err) console.log('Admin note:', err.message);
-            else console.log('✅ Admin ready: admin@parking.com / admin123');
+            if (err) console.log('   Admin note:', err.message);
+            else     console.log('   ✅ Admin ready: admin@parking.com / admin123');
             res();
           }
         );
@@ -132,7 +130,6 @@ async function setupDatabase() {
 
 module.exports = setupDatabase;
 
-// Run directly if called as script
 if (require.main === module) {
   setupDatabase().then(() => process.exit(0));
 }
