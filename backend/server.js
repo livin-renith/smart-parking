@@ -1,5 +1,5 @@
-const express  = require('express');
-const https    = require('https');
+const express = require('express');
+const https   = require('https');
 require('dotenv').config();
 
 const app = express();
@@ -32,7 +32,7 @@ app.get('/health', (req, res) => {
 });
 
 // ── Keep Render awake ──
-const BACKEND_URL = 'https://smart-parking-backend.onrender.com/health';
+const BACKEND_URL = 'https://smart-parking-backend-4lx3.onrender.com/health';
 function keepAlive() {
   https.get(BACKEND_URL, () => {
     console.log('🔄 Keep-alive —', new Date().toLocaleTimeString());
@@ -43,12 +43,12 @@ setTimeout(() => {
   setInterval(keepAlive, 10 * 60 * 1000);
 }, 60000);
 
-// ── Start server then run DB setup ──
+// ── Start server ──
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, async () => {
   console.log(`🚀 Server running on port ${PORT}`);
 
-  // Run database setup after server starts
+  // Run DB setup after server starts
   try {
     const setupDatabase = require('./setup-db');
     await setupDatabase();

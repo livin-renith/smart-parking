@@ -1,26 +1,11 @@
 const mysql = require('mysql2');
-const fs    = require('fs');
-const path  = require('path');
 require('dotenv').config();
 
-console.log('🔌 Connecting to Aiven MySQL...');
+console.log('🔌 Connecting to database...');
 console.log('   Host:', process.env.DB_HOST);
 console.log('   Port:', process.env.DB_PORT);
-
-// SSL configuration for Aiven
-let sslConfig = { rejectUnauthorized: false };
-
-// If CA cert file exists locally use it
-const caPath = path.join(__dirname, '../ca.pem');
-if (fs.existsSync(caPath)) {
-  sslConfig = {
-    rejectUnauthorized: true,
-    ca: fs.readFileSync(caPath).toString()
-  };
-  console.log('   SSL: Using CA certificate');
-} else {
-  console.log('   SSL: Using rejectUnauthorized=false');
-}
+console.log('   DB  :', process.env.DB_NAME);
+console.log('   User:', process.env.DB_USER);
 
 const db = mysql.createConnection({
   host           : process.env.DB_HOST,
@@ -28,21 +13,22 @@ const db = mysql.createConnection({
   password       : process.env.DB_PASSWORD,
   database       : process.env.DB_NAME,
   port           : parseInt(process.env.DB_PORT) || 3306,
-  ssl            : sslConfig,
+  ssl            : { rejectUnauthorized: false },
   connectTimeout : 60000
 });
 
 db.connect((err) => {
   if (err) {
-    console.error('❌ Failed:', err.message);
-    console.error('   Code:', err.code);
+    console.error('❌ Database connection failed!');
+    console.error('   Message:', err.message);
+    console.error('   Code   :', err.code);
     process.exit(1);
   }
-  console.log('✅ Connected to Aiven MySQL!');
+  console.log('✅ Connected to database successfully!');
 });
 
 db.on('error', (err) => {
-  console.error('DB error:', err.code);
+  console.error('⚠️  DB error:', err.code);
   if (err.code === 'PROTOCOL_CONNECTION_LOST' ||
       err.code === 'ECONNRESET' ||
       err.code === 'ETIMEDOUT') {
