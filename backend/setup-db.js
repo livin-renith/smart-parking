@@ -3,9 +3,7 @@ const mysql  = require('mysql2');
 const bcrypt = require('bcryptjs');
 
 async function setupDatabase() {
-  console.log('🔧 Running database setup...');
-  console.log('   Host:', process.env.DB_HOST);
-  console.log('   Port:', process.env.DB_PORT);
+  console.log('🔧 Database setup starting...');
 
   return new Promise((resolve) => {
     const db = mysql.createConnection({
@@ -13,21 +11,20 @@ async function setupDatabase() {
       user           : process.env.DB_USER,
       password       : process.env.DB_PASSWORD,
       database       : process.env.DB_NAME,
-      port           : parseInt(process.env.DB_PORT) || 3306,
+      port           : parseInt(process.env.DB_PORT),
       ssl            : { rejectUnauthorized: false },
       connectTimeout : 30000
     });
 
     db.connect(async (err) => {
       if (err) {
-        console.log('⚠️  DB setup skipped (will work on Render):', err.code);
+        console.log('⚠️  Setup skipped:', err.code);
         resolve();
         return;
       }
+      console.log('✅ Setup connected!');
 
-      console.log('✅ Connected! Setting up tables...');
-
-      const queries = [
+      const tables = [
         `CREATE TABLE IF NOT EXISTS users (
           id INT AUTO_INCREMENT PRIMARY KEY,
           name VARCHAR(100) NOT NULL,
@@ -79,33 +76,43 @@ async function setupDatabase() {
           vehicle_type ENUM('car','bike','truck') DEFAULT 'car',
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           FOREIGN KEY (user_id) REFERENCES users(id)
-        )`,
-        `INSERT IGNORE INTO locations
+        )`
+      ];
+
+      for (const q of tables) {
+        await new Promise((res) => {
+          db.query(q, (e) => {
+            if (e) console.log('   Note:', e.message.substring(0, 50));
+            else   console.log('   ✅ Table ready');
+            res();
+          });
+        });
+      }
+
+      // Insert sample data
+      await new Promise((res) => {
+        db.query(`INSERT IGNORE INTO locations
           (name,type,address,latitude,longitude,description) VALUES
           ('Cauvery Complex Mall','mall','Singarathope, Tiruchirappalli',10.8050,78.6856,'Popular shopping mall'),
           ('Mahatma Gandhi Memorial Hospital','hospital','Puthur, Tiruchirappalli',10.8299,78.6898,'Government hospital'),
           ('Hotel Sangam','hotel','Collector Office Road, Tiruchirappalli',10.8134,78.6912,'Popular hotel'),
           ('Rockfort Temple','park','Rockfort, Tiruchirappalli',10.8231,78.6872,'Famous rock fort'),
           ('Srirangam Temple','park','Srirangam, Tiruchirappalli',10.8653,78.6870,'Famous temple')`,
-        `INSERT IGNORE INTO parking_slots (slot_number,floor,location_id) VALUES
+        (e) => { if (!e) console.log('   ✅ Locations inserted'); res(); });
+      });
+
+      await new Promise((res) => {
+        db.query(`INSERT IGNORE INTO parking_slots (slot_number,floor,location_id) VALUES
           ('A1','Ground Floor',1),('A2','Ground Floor',1),('A3','Ground Floor',1),
           ('A4','First Floor',1),('A5','First Floor',1),
           ('B1','Ground Floor',2),('B2','Ground Floor',2),('B3','First Floor',2),
           ('C1','Ground Floor',3),('C2','Ground Floor',3),
           ('D1','Ground Floor',4),('D2','Ground Floor',4),
-          ('E1','Ground Floor',5),('E2','Ground Floor',5)`
-      ];
+          ('E1','Ground Floor',5),('E2','Ground Floor',5)`,
+        (e) => { if (!e) console.log('   ✅ Slots inserted'); res(); });
+      });
 
-      for (const q of queries) {
-        await new Promise((res) => {
-          db.query(q, (err) => {
-            if (err) console.log('   Note:', err.message.substring(0, 60));
-            else     console.log('   ✅', q.substring(7, 40).trim() + '...');
-            res();
-          });
-        });
-      }
-
+      // Create admin user
       const hash = await bcrypt.hash('admin123', 10);
       await new Promise((res) => {
         db.query(
@@ -113,15 +120,14 @@ async function setupDatabase() {
            VALUES ('Admin','admin@parking.com',?,'admin')
            ON DUPLICATE KEY UPDATE password=?, role='admin'`,
           [hash, hash],
-          (err) => {
-            if (err) console.log('   Admin note:', err.message);
-            else     console.log('   ✅ Admin ready: admin@parking.com / admin123');
+          (e) => {
+            if (!e) console.log('   ✅ Admin: admin@parking.com / admin123');
             res();
           }
         );
       });
 
-      console.log('🎉 Database setup complete!');
+      console.log('🎉 Setup complete!');
       db.end();
       resolve();
     });
@@ -129,7 +135,6 @@ async function setupDatabase() {
 }
 
 module.exports = setupDatabase;
-
 if (require.main === module) {
   setupDatabase().then(() => process.exit(0));
 }
