@@ -2,17 +2,14 @@ const express     = require('express');
 const router      = express.Router();
 const db          = require('../config/db');
 const verifyToken = require('../middleware/auth');
-const bcrypt      = require('bcryptjs');
 
-// Create booking
+// ── Create booking ──
 router.post('/', verifyToken, (req, res) => {
   const { user_id, slot_id, vehicle_number, start_time } = req.body;
 
-  if (!user_id || !slot_id || !vehicle_number || !start_time) {
+  if (!user_id || !slot_id || !vehicle_number || !start_time)
     return res.status(400).json({ error: 'All fields are required' });
-  }
 
-  // Check slot is available
   db.query(
     'SELECT * FROM parking_slots WHERE id = ?',
     [slot_id],
@@ -23,14 +20,12 @@ router.post('/', verifyToken, (req, res) => {
       if (results[0].status !== 'available')
         return res.status(400).json({ error: 'Slot is not available' });
 
-      // Mark slot as occupied
       db.query(
-        'UPDATE parking_slots SET status = "occupied" WHERE id = ?',
-        [slot_id],
+        'UPDATE parking_slots SET status = ? WHERE id = ?',
+        ['occupied', slot_id],
         (err2) => {
           if (err2) return res.status(500).json({ error: err2.message });
 
-          // Create booking
           db.query(
             `INSERT INTO bookings
              (user_id, slot_id, vehicle_number, start_time, fee_per_hour, payment_status)
@@ -39,8 +34,8 @@ router.post('/', verifyToken, (req, res) => {
             (err3, result) => {
               if (err3) return res.status(500).json({ error: err3.message });
               res.json({
-                message   : '✅ Slot booked successfully!',
-                bookingId : result.insertId,
+                message     : '✅ Slot booked successfully!',
+                bookingId   : result.insertId,
                 fee_per_hour: 20
               });
             }
@@ -51,7 +46,7 @@ router.post('/', verifyToken, (req, res) => {
   );
 });
 
-// Get user bookings
+// ── Get user bookings ──
 router.get('/:userId', verifyToken, (req, res) => {
   const sql = `
     SELECT b.*, p.slot_number, p.floor
@@ -66,7 +61,7 @@ router.get('/:userId', verifyToken, (req, res) => {
   });
 });
 
-// Get single booking
+// ── Get single booking ──
 router.get('/detail/:id', verifyToken, (req, res) => {
   const sql = `
     SELECT b.*, p.slot_number, p.floor, u.name as user_name, u.email
@@ -83,7 +78,7 @@ router.get('/detail/:id', verifyToken, (req, res) => {
   });
 });
 
-// Cancel booking
+// ── Cancel booking ──
 router.put('/cancel/:id', verifyToken, (req, res) => {
   db.query(
     'SELECT slot_id FROM bookings WHERE id = ?',
@@ -94,14 +89,15 @@ router.put('/cancel/:id', verifyToken, (req, res) => {
         return res.status(404).json({ error: 'Booking not found' });
 
       const slot_id = results[0].slot_id;
+
       db.query(
-        'UPDATE parking_slots SET status = "available" WHERE id = ?',
-        [slot_id],
+        'UPDATE parking_slots SET status = ? WHERE id = ?',
+        ['available', slot_id],
         (err2) => {
           if (err2) return res.status(500).json({ error: err2.message });
           db.query(
-            'UPDATE bookings SET status = "cancelled" WHERE id = ?',
-            [req.params.id],
+            'UPDATE bookings SET status = ? WHERE id = ?',
+            ['cancelled', req.params.id],
             (err3) => {
               if (err3) return res.status(500).json({ error: err3.message });
               res.json({ message: '✅ Booking cancelled' });
@@ -113,7 +109,7 @@ router.put('/cancel/:id', verifyToken, (req, res) => {
   );
 });
 
-// Pay for booking
+// ── Pay for booking ──
 router.put('/pay/:id', verifyToken, (req, res) => {
   db.query(
     'SELECT * FROM bookings WHERE id = ?',
@@ -123,23 +119,23 @@ router.put('/pay/:id', verifyToken, (req, res) => {
       if (!results || results.length === 0)
         return res.status(404).json({ error: 'Booking not found' });
 
-      const booking  = results[0];
-      const end_time = new Date();
-      const start    = new Date(booking.start_time);
-      const diffHrs  = Math.max((end_time - start) / (1000 * 60 * 60), 0.5);
-      const total_fee= Math.ceil(diffHrs * booking.fee_per_hour);
+      const booking   = results[0];
+      const end_time  = new Date();
+      const start     = new Date(booking.start_time);
+      const diffHrs   = Math.max((end_time - start) / (1000 * 60 * 60), 0.5);
+      const total_fee = Math.ceil(diffHrs * booking.fee_per_hour);
 
       db.query(
         `UPDATE bookings SET
-           end_time=?, total_fee=?,
-           payment_status='paid', payment_time=NOW(), status='completed'
-         WHERE id=?`,
-        [end_time, total_fee, req.params.id],
+           end_time = ?, total_fee = ?,
+           payment_status = ?, payment_time = NOW(), status = ?
+         WHERE id = ?`,
+        [end_time, total_fee, 'paid', 'completed', req.params.id],
         (err2) => {
           if (err2) return res.status(500).json({ error: err2.message });
           db.query(
-            'UPDATE parking_slots SET status="available" WHERE id=?',
-            [booking.slot_id],
+            'UPDATE parking_slots SET status = ? WHERE id = ?',
+            ['available', booking.slot_id],
             (err3) => {
               if (err3) return res.status(500).json({ error: err3.message });
               res.json({
