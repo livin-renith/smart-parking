@@ -10,6 +10,14 @@
   <link rel="stylesheet" href="../premium.css">
 </head>
 <body class="p-bg">
+  <style>
+@keyframes slideUp {
+  from { opacity:0; transform:translateY(30px) scale(0.95); }
+  to   { opacity:1; transform:translateY(0) scale(1); }
+}
+#modal { display:none; }
+#modal.active { display:flex !important; }
+</style>
 
 <div id="page-loader">
   <div class="loader-icon">🅿️</div>
@@ -42,6 +50,7 @@
 </div>
 
 <nav class="p-navbar">
+  <a href="locations.html" class="p-nav-link">Find Parking</a>
   <a href="dashboard.html" class="p-navbar-logo">
     <div class="p-logo-icon">🅿️</div>
     SmartPark
@@ -105,27 +114,38 @@
 
 <!-- Booking Modal -->
 <div class="modal-overlay" id="modal">
-  <div style="background:var(--p-surface);border:1px solid var(--p-border);
-              border-radius:24px;padding:32px;width:90%;max-width:440px;
-              box-shadow:0 24px 80px rgba(0,0,0,0.5);">
-    <div style="font-size:20px;font-weight:800;color:var(--p-text);margin-bottom:4px;">
-      Book Slot <span id="modalSlotName" style="color:var(--p-blue);"></span>
+  <!-- Booking Modal -->
+<div id="modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+     background:rgba(0,0,0,0.7);z-index:9999;
+     align-items:center;justify-content:center;
+     backdrop-filter:blur(4px);">
+  <div style="background:#1a1a2e;border:1px solid rgba(79,142,247,0.3);
+              border-radius:20px;padding:28px;width:90%;max-width:440px;
+              box-shadow:0 24px 80px rgba(0,0,0,0.5);
+              position:relative;max-height:90vh;overflow-y:auto;
+              animation:slideUp 0.3s ease;">
+    <div style="font-size:20px;font-weight:800;color:#f0f4ff;margin-bottom:4px;">
+      Book Slot <span id="modalSlotName" style="color:#4f8ef7;"></span>
     </div>
-    <div style="font-size:13px;color:var(--p-text3);margin-bottom:20px;">
+    <div style="font-size:13px;color:#6b7a9e;margin-bottom:20px;">
       Select a saved vehicle or enter manually
     </div>
     <div class="p-alert p-alert-error" id="modalError"></div>
     <div class="p-form-group">
       <label class="p-form-label">Saved Vehicles</label>
-      <div id="modalVehicleList" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;"></div>
+      <div id="modalVehicleList"
+           style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;"></div>
     </div>
     <div class="p-form-group">
       <label class="p-form-label">Vehicle Number</label>
-      <input class="p-form-input" type="text" id="vehicleNumber" placeholder="e.g. TN01AB1234">
+      <input class="p-form-input" type="text" id="vehicleNumber"
+             placeholder="e.g. TN01AB1234">
     </div>
     <div style="display:flex;gap:10px;margin-top:16px;">
-      <button class="p-btn p-btn-primary" style="flex:1;" onclick="confirmBooking()">✅ Confirm Booking</button>
-      <button class="p-btn p-btn-ghost"   style="flex:1;" onclick="closeModal()">Cancel</button>
+      <button class="p-btn p-btn-primary" style="flex:1;"
+              onclick="confirmBooking()">✅ Confirm Booking</button>
+      <button class="p-btn p-btn-ghost" style="flex:1;"
+              onclick="closeModal()">Cancel</button>
     </div>
   </div>
 </div>
@@ -214,29 +234,34 @@
     });
   }
 
-  async function openModal(slotId, slotName) {
-    selectedSlotId = slotId;
-    document.getElementById('modalSlotName').textContent = slotName;
-    document.getElementById('vehicleNumber').value = '';
-    document.getElementById('modal').style.display = 'flex';
-    const vehicles = await apiGet(`/vehicles/${user.id}`);
-    const list = document.getElementById('modalVehicleList');
-    list.innerHTML = vehicles.length===0
-      ? `<p style="font-size:13px;color:var(--p-text3);">No saved vehicles</p>`
-      : vehicles.map(v=>`
-          <div onclick="pickVehicle('${v.vehicle_number}',this)"
-               style="display:flex;align-items:center;gap:8px;padding:8px 12px;
-                      background:rgba(255,255,255,0.04);border:1px solid var(--p-border);
-                      border-radius:10px;cursor:pointer;transition:all 0.2s;"
-               onmouseover="this.style.borderColor='var(--p-blue)'"
-               onmouseout="this.style.borderColor='var(--p-border)'">
-            <span>${v.vehicle_type==='bike'?'🏍️':v.vehicle_type==='truck'?'🚛':'🚗'}</span>
-            <div>
-              <div style="font-size:13px;font-weight:700;color:var(--p-text);">${v.vehicle_number}</div>
-              <div style="font-size:11px;color:var(--p-text3);">${v.vehicle_name||v.vehicle_type}</div>
-            </div>
-          </div>`).join('');
-  }
+async function openModal(slotId, slotName) {
+  selectedSlotId = slotId;
+  document.getElementById('modalSlotName').textContent = slotName;
+  document.getElementById('vehicleNumber').value = '';
+
+  // ← This makes it center on screen
+  const modal = document.getElementById('modal');
+  modal.style.display = 'flex';
+
+  const vehicles = await apiGet(`/vehicles/${user.id}`);
+  const list = document.getElementById('modalVehicleList');
+  list.innerHTML = vehicles.length === 0
+    ? `<p style="font-size:13px;color:#6b7a9e;">No saved vehicles</p>`
+    : vehicles.map(v => `
+        <div onclick="pickVehicle('${v.vehicle_number}',this)"
+             style="display:flex;align-items:center;gap:8px;padding:8px 12px;
+                    background:rgba(255,255,255,0.04);border:1px solid rgba(79,142,247,0.2);
+                    border-radius:10px;cursor:pointer;transition:all 0.2s;"
+             onmouseover="this.style.borderColor='#4f8ef7'"
+             onmouseout="this.style.borderColor='rgba(79,142,247,0.2)'">
+          <span>${v.vehicle_type==='bike'?'🏍️':v.vehicle_type==='truck'?'🚛':'🚗'}</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#f0f4ff;">${v.vehicle_number}</div>
+            <div style="font-size:11px;color:#6b7a9e;">${v.vehicle_name||v.vehicle_type}</div>
+          </div>
+        </div>`).join('');
+}
+
 
   function pickVehicle(number) {
     document.getElementById('vehicleNumber').value = number;
