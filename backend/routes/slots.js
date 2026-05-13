@@ -1,14 +1,20 @@
-const express = require('express');
-const router  = express.Router();
-const db      = require('../config/db');
+const express     = require('express');
+const router      = express.Router();
+const db          = require('../config/db');
+const verifyToken = require('../middleware/auth');
 
+// ── Get all slots ──
 router.get('/', (req, res) => {
-  db.query('SELECT * FROM parking_slots ORDER BY slot_number', (err, results) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json(results);
-  });
+  db.query(
+    'SELECT * FROM parking_slots ORDER BY slot_number',
+    (err, results) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json(results);
+    }
+  );
 });
 
+// ── Get slots by location ──
 router.get('/location/:locationId', (req, res) => {
   db.query(
     'SELECT * FROM parking_slots WHERE location_id = ? ORDER BY slot_number',
@@ -20,7 +26,8 @@ router.get('/location/:locationId', (req, res) => {
   );
 });
 
-router.put('/:id', (req, res) => {
+// ── Update slot status ──
+router.put('/:id', verifyToken, (req, res) => {
   const { status } = req.body;
   db.query(
     'UPDATE parking_slots SET status = ? WHERE id = ?',
